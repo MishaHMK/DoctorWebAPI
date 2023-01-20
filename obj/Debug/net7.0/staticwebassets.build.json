@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "nnpOFTbxW8uF7l958ZgNoIMfox7jD8KO5C/npUn+aZ8=",
+  "Source": "DoctorWebApi",
+  "BasePath": "_content/DoctorWebApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
