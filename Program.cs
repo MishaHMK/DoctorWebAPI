@@ -21,6 +21,8 @@ builder.Services.AddSession();
 
 builder.Services.AddAuthentication().AddJwtBearer();
 
+builder.Services.AddTransient<IAppointmentService, AppointmentService>();
+
 builder.Services.AddTransient<IJwtService, JwtService>();
 
 builder.Services.AddControllers();

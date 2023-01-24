@@ -29,22 +29,6 @@ namespace DoctorWebApi.Controllers
             _jwtService = jwtService;
         }
 
-
-        // GET: api/<AccountController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<AccountController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-
         // POST api/Account/roles
         [HttpGet("roles")]
         public async Task<List<string>> CheckRoles()
