@@ -29,7 +29,7 @@ namespace DoctorWebApi.Controllers
             _jwtService = jwtService;
         }
 
-        // POST api/Account/roles
+        // GET api/Account/roles
         [HttpGet("roles")]
         public async Task<List<string>> CheckRoles()
         {
@@ -59,6 +59,21 @@ namespace DoctorWebApi.Controllers
             }
 
             return roleList;
+        }
+
+        // GET api/Account/times
+        [HttpGet("times")]
+        public async Task<List<string>> GetTimes()
+        {
+            var times = Timestamps.GetTimesForDropDown(); 
+            var timeList = new List<string>();
+
+            foreach (var time in times)
+            {
+                timeList.Add(time.Text);
+            }
+
+            return timeList;
         }
 
         // POST api/Account/register
