@@ -73,9 +73,9 @@ namespace DoctorWebApi.Services
                                   
         }
 
-        public List<AppointmentDTO> PatientsEventsById(string patientId)
+        public List<AppointmentDTO> PatientsEventsById(string patientId, string doctorId)
         {
-            return _db.Appointments.Where(x => x.PatientId == patientId).ToList()
+            return _db.Appointments.Where(x => x.PatientId == patientId && x.DoctorId == doctorId).ToList()
                                   .Select(c => new AppointmentDTO()
                                   {
                                       Id = c.Id,
@@ -86,6 +86,26 @@ namespace DoctorWebApi.Services
                                       Duration = c.Duration,
                                       IsApproved = c.IsApproved 
                                   }).ToList();
+        }
+
+
+        public AppointmentDTO GetDetailsById(int Id)
+        {
+            return _db.Appointments.Where(x => x.Id == Id).ToList()
+                                  .Select(c => new AppointmentDTO()
+                                  {
+                                      Id = c.Id,
+                                      Title = c.Title,
+                                      Description = c.Description,
+                                      StartDate = c.StartDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                                      EndDate = c.EndDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                                      Duration = c.Duration,
+                                      IsApproved = c.IsApproved,
+                                      PatientId = c.PatientId,
+                                      DoctorId= c.DoctorId, 
+                                      PatientName = _db.Users.Where(x=>x.Id==c.PatientId).Select(x=>x.Name).FirstOrDefault(),
+                                      DoctorName = _db.Users.Where(x => x.Id == c.DoctorId).Select(x => x.Name).FirstOrDefault()
+                                  }).SingleOrDefault();
         }
 
         public List<Doctor> GetDoctorList()

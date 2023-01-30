@@ -15,10 +15,12 @@ namespace DoctorWebApi.Controllers
     {
         private readonly IAppointmentService _appointmentService;
         private readonly string loginUserId;
+        private readonly ApplicationDbContext _db;
 
-        public AppointmentController(IAppointmentService appointmentService)
+        public AppointmentController(IAppointmentService appointmentService, ApplicationDbContext db)
         {
             _appointmentService = appointmentService;
+            _db = db;
         }
 
         // GET: api/Appointment/doctors
@@ -75,7 +77,7 @@ namespace DoctorWebApi.Controllers
             {
                 if (role == Roles.Patient)
                 {
-                    response = _appointmentService.PatientsEventsById(patientId);
+                    response = _appointmentService.PatientsEventsById(patientId, doctorId);
                     return Ok(response);
                 }
                 else if (role == Roles.Doctor)
@@ -93,6 +95,52 @@ namespace DoctorWebApi.Controllers
             {
                 return BadRequest("Exceptional error!");
             }
+
+        }
+
+
+
+        // GET api/Appointment/GetCalendarDataById/id
+        [HttpGet]
+        [Route("GetCalendarDataById/{id}")]
+        public async Task<IActionResult> GetCalendarDataById(int id)
+        {
+            AppointmentDTO response = new AppointmentDTO();
+            try
+            {
+               response = _appointmentService.GetDetailsById(id);
+               return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return BadRequest("Exceptional error!");
+            }
+
+        }
+
+        // PUT api/Appointment/Edit/id
+        [HttpPut]
+        [Route("Edit/{id}")]
+        public async Task<IActionResult> EditAppointmentById(int id, [FromBody] AppointmentDTO appointmentDTO)
+        {
+            var appointmentToUpdate = _db.Appointments.FirstOrDefault(x => x.Id == appointmentDTO.Id);
+            var startDate = Convert.ToDateTime(appointmentDTO.StartDate);
+            var endDate = Convert.ToDateTime(appointmentDTO.StartDate).AddMinutes(Convert.ToDouble(60));
+            if (appointmentToUpdate == null)
+            {
+                return NotFound($"Appointment with Id = {id} not found");
+            }
+            appointmentToUpdate.Title = appointmentDTO.Title;
+            appointmentToUpdate.Description = appointmentDTO.Description;
+            appointmentToUpdate.StartDate = startDate;
+            appointmentToUpdate.EndDate = endDate;
+            appointmentToUpdate.Duration = 60;
+            appointmentToUpdate.DoctorId = appointmentDTO.DoctorId;
+            appointmentToUpdate.PatientId = appointmentDTO.PatientId;
+            appointmentToUpdate.IsApproved = false;
+            appointmentToUpdate.AdminId = appointmentDTO.AdminId;
+            await _db.SaveChangesAsync();
+            return NoContent();
 
         }
     }
