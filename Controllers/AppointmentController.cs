@@ -141,6 +141,17 @@ namespace DoctorWebApi.Controllers
             appointmentToUpdate.AdminId = appointmentDTO.AdminId;
             await _db.SaveChangesAsync();
             return NoContent();
+        }
+
+        // PUT api/Appointment/Edit/id
+        [HttpDelete]
+        [Route("Delete/{id}")]
+        public async Task<IActionResult> DeleteAppointmentById(int id)
+        {
+            var appointmentToDelete = _db.Appointments.FirstOrDefault(x => x.Id == id);
+            _db.Appointments.Remove(appointmentToDelete);
+            _db.SaveChanges();
+            return Ok("Removed");
 
         }
     }
