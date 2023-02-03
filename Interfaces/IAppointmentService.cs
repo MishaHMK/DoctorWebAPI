@@ -7,7 +7,7 @@ namespace DoctorWebApi.Interfaces
     {
         public List<Doctor> GetDoctorList();
         public List<Patient> GetPatientList();
-        public Task<int> AddOrUpdate(AppointmentDTO model);
+        public Task Add(Appointment model);
         public List<AppointmentDTO> DoctorEventsById(string doctorId);
         public List<AppointmentDTO> PatientsEventsById(string patientId, string doctorId);
 

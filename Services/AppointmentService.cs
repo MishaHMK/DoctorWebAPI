@@ -13,48 +13,10 @@ namespace DoctorWebApi.Services
             _db = db;
         }
 
-        public async Task<int> AddOrUpdate(AppointmentDTO model)
+        public async Task Add(Appointment appointment)
         {
-            var startDate = Convert.ToDateTime(model.StartDate);
-            var endDate = Convert.ToDateTime(model.StartDate).AddMinutes(Convert.ToDouble(60));
-            var patient = _db.Users.FirstOrDefault(u => u.Id == model.PatientId);
-            var doctor = _db.Users.FirstOrDefault(u => u.Id == model.DoctorId);
-
-            if (model != null && model.Id > 0){ //update
-
-                var appointment = _db.Appointments.FirstOrDefault(x => x.Id == model.Id);
-                appointment.Title = model.Title;
-                appointment.Description = model.Description;
-                appointment.StartDate = startDate;
-                appointment.EndDate = endDate;
-                appointment.Duration = 60;
-                appointment.DoctorId = model.DoctorId;
-                appointment.PatientId = model.PatientId;
-                appointment.IsApproved = false;
-                appointment.AdminId = model.AdminId;
-                await _db.SaveChangesAsync();
-                return 1;
-
-            }
-            else //create
-            {
-                Appointment appointment = new Appointment()
-                {
-                    Title = model.Title,
-                    Description = model.Description,
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    Duration = 60,
-                    DoctorId = model.DoctorId,
-                    PatientId = model.PatientId,
-                    IsApproved = false,
-                    AdminId = model.AdminId
-                };
-
-                _db.Appointments.Add(appointment);
-                await _db.SaveChangesAsync();
-                return 2;
-            }
+            await _db.Appointments.AddAsync(appointment);
+            await _db.SaveChangesAsync();
         }
 
         public List<AppointmentDTO> DoctorEventsById(string doctorId)

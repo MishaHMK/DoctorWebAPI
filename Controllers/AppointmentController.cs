@@ -2,6 +2,7 @@
 using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.AccessControl;
 using System.Security.Claims;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -42,28 +43,33 @@ namespace DoctorWebApi.Controllers
         // POST api/Appointment/save
         [HttpPost]
         [Route("save")]
-        public async Task<IActionResult> SaveData(AppointmentDTO model) {
-            CommonResponse<int> commonResponse = new CommonResponse<int>();
-            try
-            {
-                commonResponse.status = _appointmentService.AddOrUpdate(model).Result;
-                if (commonResponse.status == 1)
-                {
-                    commonResponse.message = Responses.appointmentUpdated;
-                }
-                if (commonResponse.status == 2)
-                {
-                    commonResponse.message = Responses.appointmentAdded;
-                }
-            }
-            catch (Exception e)
-            {
-                commonResponse.message = e.Message;
-                commonResponse.status = Responses.failure_code;
-            }
+        public async Task<IActionResult> SaveData([FromBody] AppointmentDTO model) {
 
-            return Ok(commonResponse);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var startDate = Convert.ToDateTime(model.StartDate);
+            var endDate = Convert.ToDateTime(model.StartDate).AddMinutes(Convert.ToDouble(60));
+            var patient = _db.Users.FirstOrDefault(u => u.Id == model.PatientId);
+            var doctor = _db.Users.FirstOrDefault(u => u.Id == model.DoctorId);
 
+            Appointment appointment = new Appointment()
+            {
+                Title = model.Title,
+                Description = model.Description,
+                StartDate = startDate,
+                EndDate = endDate,
+                Duration = 60,
+                DoctorId = model.DoctorId,
+                PatientId = model.PatientId,
+                IsApproved = false,
+                AdminId = model.AdminId
+            };
+
+            await _appointmentService.Add(appointment);
+
+            return Ok(appointment);
         }
 
 
