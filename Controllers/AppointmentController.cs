@@ -1,6 +1,8 @@
-﻿using DoctorWebApi.Interfaces;
+﻿using Azure;
+using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.AccessControl;
 using System.Security.Claims;
@@ -146,7 +148,24 @@ namespace DoctorWebApi.Controllers
             appointmentToUpdate.IsApproved = false;
             appointmentToUpdate.AdminId = appointmentDTO.AdminId;
             await _db.SaveChangesAsync();
-            return NoContent();
+            return Ok(appointmentToUpdate);
+        }
+
+        // PATCH  api/Appointment/Approve/id
+        [HttpPatch]
+        [Route("Approve/{id}/{status}")]
+        public async Task<IActionResult> ApproveAppointmentById(int id, bool status) { 
+            var appointmentToUpdate = _db.Appointments.FirstOrDefault(x => x.Id == id);
+
+            if (appointmentToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            appointmentToUpdate.IsApproved = status;
+
+            await _db.SaveChangesAsync();
+            return Ok(appointmentToUpdate);
         }
 
         // PUT api/Appointment/Edit/id
