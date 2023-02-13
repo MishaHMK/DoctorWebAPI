@@ -1,5 +1,6 @@
 ﻿using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
@@ -8,9 +9,11 @@ namespace DoctorWebApi.Services
     public class AppointmentService : IAppointmentService
     {
         private readonly ApplicationDbContext _db;
-        public AppointmentService(ApplicationDbContext db)
+        private readonly IEmailSender _emailSender;
+        public AppointmentService(ApplicationDbContext db, IEmailSender emailSender)
         {
             _db = db;
+            _emailSender = emailSender;
         }
 
         public async Task Add(Appointment appointment)

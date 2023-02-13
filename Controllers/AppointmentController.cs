@@ -1,7 +1,9 @@
 ﻿using Azure;
 using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.AccessControl;
@@ -17,13 +19,14 @@ namespace DoctorWebApi.Controllers
     public class AppointmentController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
-        private readonly string loginUserId;
         private readonly ApplicationDbContext _db;
+        private readonly IEmailSender _emailSender;
 
-        public AppointmentController(IAppointmentService appointmentService, ApplicationDbContext db)
+        public AppointmentController(IAppointmentService appointmentService, ApplicationDbContext db, IEmailSender emailSender)
         {
             _appointmentService = appointmentService;
             _db = db;
+            _emailSender = emailSender;
         }
 
         // GET: api/Appointment/doctors
@@ -69,6 +72,10 @@ namespace DoctorWebApi.Controllers
                 AdminId = model.AdminId
             };
 
+            await _emailSender.SendEmailAsync(doctor.Email, "Appointment Created", 
+                                              $"Your appointment with {patient.Name} is created and in pending status");
+            await _emailSender.SendEmailAsync(patient.Email, "Appointment Created",
+                                              $"Your appointment with {doctor.Name} is created and in pending status");
             await _appointmentService.Add(appointment);
 
             return Ok(appointment);

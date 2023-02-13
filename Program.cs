@@ -7,10 +7,12 @@ using DoctorWebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using DoctorWebApi.Utility;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.Extensions.Configuration;
+using DoctorWebApi.Provider;
 
 var builder = WebApplication.CreateBuilder();
-
-// Add services to the container.
 
 builder.Services.AddCors(options =>
 {
@@ -25,16 +27,35 @@ builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 
 builder.Services.AddTransient<IJwtService, JwtService>();
 
+builder.Services.AddScoped<IEmailSender, EmailSender>();
+
 builder.Services.AddControllers();
 
 builder.Services.AddMvc().AddSessionStateTempDataProvider();
 
-builder.Services.AddSession();
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+builder.Services.Configure<HostUrlOptions>(builder.Configuration.GetSection("URLs"));
+
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddIdentity<User, IdentityRole>(opt =>
+{
+    opt.User.RequireUniqueEmail = true;
+    opt.SignIn.RequireConfirmedEmail = true;
+    opt.Tokens.EmailConfirmationTokenProvider = "emailconfirmation";
+})
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddTokenProvider<EmailConfirmationTokenProvider<User>>("emailconfirmation");
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -59,15 +80,12 @@ app.UseCors("AllowOrigin");
 
 app.UseHttpsRedirection();
 
-app.UseSession();
-
 app.UseAuthorization();
 
 app.UseAuthentication();
 
 app.MapControllers();
 
-app.UseSession();
 
 app.UseEndpoints(endpoints =>
 {

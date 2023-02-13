@@ -1,10 +1,12 @@
 ﻿using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
-using DoctorWebApi.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+using System.Web;
 
 namespace DoctorWebApi.Controllers
 {
@@ -14,20 +16,26 @@ namespace DoctorWebApi.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IJwtService _jwtService;
+        private readonly IEmailSender _emailSender;
         UserManager<User> _userManager;
         SignInManager<User> _signInManager;
         RoleManager<IdentityRole> _roleManager;
+        private readonly HostUrlOptions _hostUrl;
 
         public AccountController(ApplicationDbContext context, UserManager<User> userManager,
             SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager,
-            IJwtService jwtService)
+            IJwtService jwtService, IOptions<HostUrlOptions> options, IEmailSender emailSender)
         {
             _context = context;
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtService = jwtService;
+            _hostUrl = options.Value;
+            _emailSender = emailSender;
         }
+
+        public string BackEndApiURL => _hostUrl.BackEnd + "/api";
 
         // GET api/Account/roles
         [HttpGet("roles")]
@@ -88,7 +96,7 @@ namespace DoctorWebApi.Controllers
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    Name = model.Name
+                    Name = model.Name 
                 };
                 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -96,8 +104,22 @@ namespace DoctorWebApi.Controllers
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, model.RoleName);
-                    await _signInManager.SignInAsync(user, isPersistent: false); 
-                    return CreatedAtAction("Register", new { id = user.Id }, user);
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    try
+                    {
+                        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        var encoded = HttpUtility.UrlEncode(token);
+                        string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
+                        await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
+                                                 $"Follow the: <br/><a href={url}>link to confirm</a>");
+                    }
+                    catch (Exception)
+                    {
+                        await _userManager.DeleteAsync(user);
+                        throw;
+                    }
+
+                    return NoContent();
                 }
             }
 
@@ -116,7 +138,7 @@ namespace DoctorWebApi.Controllers
                 if (result.Succeeded)
                 {
                     var user = await _userManager.FindByNameAsync(model.Email);
-                    HttpContext.Session.SetString("ssuserName", user.Name);
+                    //HttpContext.Session.SetString("ssuserName", user.Name);
                     var generatedToken = await _jwtService.GenerateJWTTokenAsync(user);
                     return Ok(new { token = generatedToken });
                 }
@@ -131,6 +153,20 @@ namespace DoctorWebApi.Controllers
         {
             _signInManager.SignOutAsync();
             return Ok();
+        }
+
+        [HttpGet("confirmEmail")]
+        public async Task<IActionResult> ConfirmEmail([Required, FromQuery] string userId, [Required, FromQuery] string token)
+        {
+            var decodedToken = HttpUtility.UrlDecode(token);
+            var user = await _userManager.FindByIdAsync(userId);
+            decodedToken = decodedToken.Replace(" ", "+"); 
+            if (user == null)
+            {
+                return NotFound("No user");
+            }
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            return Ok(result);
         }
     }
 }
