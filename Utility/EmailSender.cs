@@ -21,7 +21,7 @@ namespace DoctorWebApi.Utility
                 Resource = Send.Resource,
             }
             .Property(Send.FromEmail, "xanartgg@gmail.com")
-            .Property(Send.FromName, "Dr.Mich Appointment")
+            .Property(Send.FromName, "Dr.Mich")
             .Property(Send.Subject, subject)
             .Property(Send.HtmlPart, htmlMessage)
             .Property(Send.Recipients, new JArray {

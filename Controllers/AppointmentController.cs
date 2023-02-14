@@ -1,14 +1,8 @@
 ﻿using Azure;
 using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.AccessControl;
-using System.Security.Claims;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -73,9 +67,9 @@ namespace DoctorWebApi.Controllers
             };
 
             await _emailSender.SendEmailAsync(doctor.Email, "Appointment Created", 
-                                              $"Your appointment with {patient.Name} is created and in pending status");
+                                              $"Your appointment with {patient.Name} has been created and in pending status");
             await _emailSender.SendEmailAsync(patient.Email, "Appointment Created",
-                                              $"Your appointment with {doctor.Name} is created and in pending status");
+                                              $"Your appointment with {doctor.Name} has been created and in pending status");
             await _appointmentService.Add(appointment);
 
             return Ok(appointment);
@@ -170,18 +164,51 @@ namespace DoctorWebApi.Controllers
             }
 
             appointmentToUpdate.IsApproved = status;
+            var patient = _db.Users.FirstOrDefault(u => u.Id == appointmentToUpdate.PatientId);
+            var doctor = _db.Users.FirstOrDefault(u => u.Id == appointmentToUpdate.DoctorId);
+
+
+            if(status == true)
+            {
+                await _emailSender.SendEmailAsync(doctor.Email, "Appointment Approved",
+                                           $"You have approved appointment #{appointmentToUpdate.Id} with " +
+                                           $"{patient.Name}");
+                await _emailSender.SendEmailAsync(patient.Email, "Appointment Approved",
+                                                  $"Your appointment #{appointmentToUpdate.Id} with " +
+                                                  $"{doctor.Name} has been approved");
+            }
+            else if (status == false)
+            {
+                await _emailSender.SendEmailAsync(doctor.Email, "Appointment Cancelled",
+                                                            $"You have cancelled appointment #{appointmentToUpdate.Id} with " +
+                                                            $"{patient.Name}");
+                await _emailSender.SendEmailAsync(patient.Email, "Appointment Cancelled",
+                                                  $"Your appointment #{appointmentToUpdate.Id} with " +
+                                                  $"{doctor.Name} has been cancelled");
+            }
 
             await _db.SaveChangesAsync();
             return Ok(appointmentToUpdate);
         }
 
-        // PUT api/Appointment/Edit/id
+        // DELETE api/Appointment/Delete/id
         [HttpDelete]
         [Route("Delete/{id}")]
         public async Task<IActionResult> DeleteAppointmentById(int id)
         {
             var appointmentToDelete = _db.Appointments.FirstOrDefault(x => x.Id == id);
             _db.Appointments.Remove(appointmentToDelete);
+
+            var patient = _db.Users.FirstOrDefault(u => u.Id == appointmentToDelete.PatientId);
+            var doctor = _db.Users.FirstOrDefault(u => u.Id == appointmentToDelete.DoctorId);
+
+            await _emailSender.SendEmailAsync(doctor.Email, "Appointment Deleted",
+                                             $"Your appointment #{appointmentToDelete.Id} with " +
+                                             $"{patient.Name} has been deleted");
+            await _emailSender.SendEmailAsync(patient.Email, "Appointment Deleted",
+                                              $"Your appointment #{appointmentToDelete.Id} with " +
+                                              $"{doctor.Name} has been deleted");
+
             _db.SaveChanges();
             return Ok("Removed");
 
