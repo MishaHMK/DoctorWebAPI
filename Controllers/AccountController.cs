@@ -166,7 +166,7 @@ namespace DoctorWebApi.Controllers
         {
             var query = _db.Users.AsNoTracking();
             var userList = await _accService.GetUsersAsync(userParams);
-            var responce = new PaginationHeader(userList, userParams.PageNumber, userParams.PageSize, query.Count());
+            var responce = new PaginationHeader(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
             return Ok(responce);
         }
 

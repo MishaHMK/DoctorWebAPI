@@ -16,9 +16,26 @@ namespace DoctorWebApi.Services
 
         public async Task<PagedList<User>> GetUsersAsync(UserParams userParams)
         {
-            var query = _db.Users.AsNoTracking();
+            var query = (from user in _db.Users
+                             join userRoles in _db.UserRoles on user.Id equals userRoles.UserId
+                             join roles in _db.Roles.Where(x => x.Name == Roles.Doctor) on userRoles.RoleId equals roles.Id
+                             select new User { 
+                                    Id = user.Id,
+                                    UserName = user.UserName,    
+                                    Email = user.Email,
+                                    EmailConfirmed = user.EmailConfirmed,
+                                    PasswordHash = user.PasswordHash,
+                                    SecurityStamp = user.SecurityStamp,
+                                    PhoneNumber = user.PhoneNumber,
+                                    Name = user.Name,
+                                    Introduction = user.Introduction,  
+                                    LastActive = user.LastActive,    
+                                    RegisteredOn = user.RegisteredOn,
+                                    Speciality = user.Speciality
+                             }
+                          );
 
-            return await PagedList<User>.CreateAsync(query, userParams.PageNumber, userParams.PageSize);
+            return await PagedList<User>.CreateAsync(query, userParams.PageNumber, userParams.PageSize, query.Count());
         }
     }
 }
