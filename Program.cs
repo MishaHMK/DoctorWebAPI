@@ -25,6 +25,8 @@ builder.Services.AddAuthentication().AddJwtBearer();
 
 builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 
+builder.Services.AddTransient<IAccountService, AccountService>();
+
 builder.Services.AddTransient<IJwtService, JwtService>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();

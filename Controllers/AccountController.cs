@@ -1,11 +1,13 @@
-﻿using DoctorWebApi.Interfaces;
+﻿using DoctorWebApi.Extensions;
+using DoctorWebApi.Helpers;
+using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using System.Web;
 
 namespace DoctorWebApi.Controllers
@@ -14,8 +16,9 @@ namespace DoctorWebApi.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _db;
         private readonly IJwtService _jwtService;
+        private readonly IAccountService _accService;
         private readonly IEmailSender _emailSender;
         UserManager<User> _userManager;
         SignInManager<User> _signInManager;
@@ -24,15 +27,17 @@ namespace DoctorWebApi.Controllers
 
         public AccountController(ApplicationDbContext context, UserManager<User> userManager,
             SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager,
-            IJwtService jwtService, IOptions<HostUrlOptions> options, IEmailSender emailSender)
+            IJwtService jwtService, IOptions<HostUrlOptions> options, 
+            IEmailSender emailSender, IAccountService accService)
         {
-            _context = context;
+            _db = context;
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtService = jwtService;
             _hostUrl = options.Value;
             _emailSender = emailSender;
+            _accService = accService;
         }
 
         public string BackEndApiURL => _hostUrl.BackEnd + "/api";
@@ -104,7 +109,7 @@ namespace DoctorWebApi.Controllers
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, model.RoleName);
-                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    await _signInManager.SignInAsync(user, isPersistent: true);
                     try
                     {
                         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -138,7 +143,6 @@ namespace DoctorWebApi.Controllers
                 if (result.Succeeded)
                 {
                     var user = await _userManager.FindByNameAsync(model.Email);
-                    //HttpContext.Session.SetString("ssuserName", user.Name);
                     var generatedToken = await _jwtService.GenerateJWTTokenAsync(user);
                     return Ok(new { token = generatedToken });
                 }
@@ -153,6 +157,17 @@ namespace DoctorWebApi.Controllers
         {
             _signInManager.SignOutAsync();
             return Ok();
+        }
+
+
+        // GET: api/Account/users
+        [HttpGet("users")]
+        public async Task<ActionResult<PagedList<User>>> GetAllUsers([FromQuery]UserParams userParams)
+        {
+            var query = _db.Users.AsNoTracking();
+            var userList = await _accService.GetUsersAsync(userParams);
+            var responce = new PaginationHeader(userList, userParams.PageNumber, userParams.PageSize, query.Count());
+            return Ok(responce);
         }
 
         [HttpGet("confirmEmail")]

@@ -1,4 +1,5 @@
-﻿using DoctorWebApi.Interfaces;
+﻿using DoctorWebApi.Helpers;
+using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -90,7 +91,6 @@ namespace DoctorWebApi.Services
         }
         public List<Patient> GetPatientList()
         {
-
             var patinents = (from user in _db.Users
                            join userRoles in _db.UserRoles on user.Id equals userRoles.UserId
                            join roles in _db.Roles.Where(x => x.Name == Roles.Patient) on userRoles.RoleId equals roles.Id
