@@ -42,7 +42,7 @@ namespace DoctorWebApi.Services
                 query = query.Where(u => u.Name.Contains(userParams.SearchName));
             }
 
-            if (userParams.Speciality != null && userParams.Speciality != "")
+            if (userParams.Speciality != null && (userParams.Speciality != "" || userParams.Speciality != "Any"))
             {
                 query = query.Where(u => u.Speciality == userParams.Speciality);
             }
