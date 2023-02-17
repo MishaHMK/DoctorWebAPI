@@ -89,6 +89,21 @@ namespace DoctorWebApi.Controllers
             return timeList;
         }
 
+        // GET api/Account/specialities
+        [HttpGet("specialities")]
+        public async Task<List<string>> GetSpecialities()
+        {
+            var specs = Specialities.GetSpecialitiesForDropDown();
+            var list = new List<string>();
+
+            foreach (var s in specs)
+            {
+                list.Add(s.Text);
+            }
+
+            return list;
+        }
+
         // POST api/Account/register
         [HttpPost]
         [Route("register")]
@@ -164,12 +179,13 @@ namespace DoctorWebApi.Controllers
         [HttpGet("users")]
         public async Task<ActionResult<PagedList<User>>> GetAllUsers([FromQuery]UserParams userParams)
         {
-            var query = _db.Users.AsNoTracking();
             var userList = await _accService.GetUsersAsync(userParams);
             var responce = new PaginationHeader(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
             return Ok(responce);
         }
 
+
+        // GET: api/Account/confirmEmail
         [HttpGet("confirmEmail")]
         public async Task<IActionResult> ConfirmEmail([Required, FromQuery] string userId, [Required, FromQuery] string token)
         {

@@ -10,5 +10,8 @@
             get => _pageSize; 
             set => _pageSize = (value > MaxPageSize) ? MaxPageSize : value; 
         }
+        
+        public string? SearchName { get; set; } 
+        public string? Speciality { get; set; }
     }
 }

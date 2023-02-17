@@ -3,6 +3,7 @@ using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace DoctorWebApi.Services
 {
@@ -34,6 +35,17 @@ namespace DoctorWebApi.Services
                                     Speciality = user.Speciality
                              }
                           );
+
+
+            if(userParams.SearchName != null && userParams.SearchName != "")
+            {
+                query = query.Where(u => u.Name.Contains(userParams.SearchName));
+            }
+
+            if (userParams.Speciality != null && userParams.Speciality != "")
+            {
+                query = query.Where(u => u.Speciality == userParams.Speciality);
+            }
 
             return await PagedList<User>.CreateAsync(query, userParams.PageNumber, userParams.PageSize, query.Count());
         }
