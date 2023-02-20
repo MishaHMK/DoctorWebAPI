@@ -24,5 +24,7 @@ namespace DoctorWebApi.Models
 
         [Required]
         public string? RoleName { get; set; }
+
+        public string? Speciality { get; set; }
     }
 }

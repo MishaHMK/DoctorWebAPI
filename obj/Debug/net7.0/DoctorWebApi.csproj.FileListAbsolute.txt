@@ -88,3 +88,6 @@ C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\DoctorWeb
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Mailjet.Client.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Microsoft.AspNetCore.Identity.UI.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Microsoft.Extensions.FileProviders.Embedded.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityModel.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityModel.AspNetCore.OAuth2Introspection.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityServer4.AccessTokenValidation.dll

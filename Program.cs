@@ -11,17 +11,41 @@ using DoctorWebApi.Utility;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
 using DoctorWebApi.Provider;
+using DoctorWebApi.Helpers;
+using IdentityServer4.AccessTokenValidation;
 
 var builder = WebApplication.CreateBuilder();
 
-builder.Services.AddCors(options =>
+builder.Services.AddAuthentication(options =>
 {
-    options.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
+    options.DefaultAuthenticateScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+
+})
+    .AddJwtBearer(o =>
+    {
+        o.SaveToken = true;
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Df6YcHO4ZiHEMWM4IN0cnWwbM"))
+        };
+        o.Events = new JwtBearerEvents()
+        {
+            OnAuthenticationFailed = async context =>
+            {
+                var ex = context.Exception;
+            }
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddSession();
-
-builder.Services.AddAuthentication().AddJwtBearer();
 
 builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 
@@ -30,6 +54,8 @@ builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+
+builder.Services.AddScoped<UserActivity>();
 
 builder.Services.AddControllers();
 
@@ -54,10 +80,9 @@ builder.Services.AddIdentity<User, IdentityRole>(opt =>
 {
     opt.User.RequireUniqueEmail = true;
     opt.SignIn.RequireConfirmedEmail = true;
-    opt.Tokens.EmailConfirmationTokenProvider = "emailconfirmation";
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddTokenProvider<EmailConfirmationTokenProvider<User>>("emailconfirmation");
+    .AddDefaultTokenProviders();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -72,22 +97,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseStaticFiles();
-
-app.UseSession();
+app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseCors("AllowOrigin");
+app.UseCors(x => x
+           .AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader());
 
-app.UseHttpsRedirection();
+app.UseDefaultFiles();
 
-app.UseAuthorization();
+app.UseStaticFiles();
+
+//app.UseSession();
 
 app.UseAuthentication();
 
-app.MapControllers();
+app.UseAuthorization();
 
+//app.MapControllers();
 
 app.UseEndpoints(endpoints =>
 {

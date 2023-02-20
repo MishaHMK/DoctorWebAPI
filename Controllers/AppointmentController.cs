@@ -1,13 +1,15 @@
 ﻿using Azure;
+using Azure.Core.Pipeline;
 using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
+using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace DoctorWebApi.Controllers
 {
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AppointmentController : ControllerBase
@@ -106,8 +108,6 @@ namespace DoctorWebApi.Controllers
             }
 
         }
-
-
 
         // GET api/Appointment/GetCalendarDataById/id
         [HttpGet]

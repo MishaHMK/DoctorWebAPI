@@ -2,6 +2,7 @@
 using DoctorWebApi.Helpers;
 using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -125,6 +126,7 @@ namespace DoctorWebApi.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, model.RoleName);
                     await _signInManager.SignInAsync(user, isPersistent: true);
+                    user.Speciality = model.Speciality;
                     try
                     {
                         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -132,6 +134,7 @@ namespace DoctorWebApi.Controllers
                         string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
                         await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
                                                  $"Follow the: <br/><a href={url}>link to confirm</a>");
+                        await _db.SaveChangesAsync();   
                     }
                     catch (Exception)
                     {
@@ -159,12 +162,15 @@ namespace DoctorWebApi.Controllers
                 {
                     var user = await _userManager.FindByNameAsync(model.Email);
                     var generatedToken = await _jwtService.GenerateJWTTokenAsync(user);
+                    user.LastActive = DateTime.UtcNow;
+                    _db.SaveChangesAsync(); 
+
                     return Ok(new { token = generatedToken });
                 }
-                return BadRequest("No Succedded");
+                return Unauthorized();
             }
 
-            return BadRequest("Not valid");
+            return Unauthorized();
         }
 
         [HttpGet("logout")]
@@ -197,6 +203,8 @@ namespace DoctorWebApi.Controllers
                 return NotFound("No user");
             }
             var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            user.LastActive = DateTime.UtcNow;
+            _db.SaveChangesAsync(); 
             return Ok(result);
         }
     }

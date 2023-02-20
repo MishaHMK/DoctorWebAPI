@@ -13,5 +13,8 @@
         
         public string? SearchName { get; set; } 
         public string? Speciality { get; set; }
+
+        public string? Sort { get; set; }
+        public string? OrderBy { get; set; }
     }
 }

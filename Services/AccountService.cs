@@ -42,12 +42,40 @@ namespace DoctorWebApi.Services
                 query = query.Where(u => u.Name.Contains(userParams.SearchName));
             }
 
-            if (userParams.Speciality != null && (userParams.Speciality != "" || userParams.Speciality != "Any"))
+            if (userParams.Speciality != null && (userParams.Speciality != "" && userParams.Speciality != "Any"))
             {
                 query = query.Where(u => u.Speciality == userParams.Speciality);
             }
 
+            if (userParams.Sort != null && userParams.Sort != "")
+            {
+                query = userParams.Sort switch
+                {
+                    "name" => userParams.OrderBy switch
+                    {
+                        "ascend" => query.OrderBy(u => u.Name),
+                        "descend" => query.OrderByDescending(u => u.Name),
+                      //  _ => throw new NotImplementedException()
+                    },
+                   // _ => throw new NotImplementedException()
+                };
+            }
+
+
             return await PagedList<User>.CreateAsync(query, userParams.PageNumber, userParams.PageSize, query.Count());
         }
+
+        public async Task<User> GetUserAsync(string name)
+        {
+            var result = await _db.Users.Where(u => u.Name== name).FirstOrDefaultAsync();
+
+            return result;
+        }
+
+        public async Task<bool> SaveAllAsync()
+        {
+            return await _db.SaveChangesAsync() > 0;
+        }
+
     }
 }

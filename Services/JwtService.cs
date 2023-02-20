@@ -1,8 +1,11 @@
 ﻿using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
+using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -12,14 +15,14 @@ namespace DoctorWebApi.Services
     public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
-        private readonly UserManager<User> _userManager;
+        private readonly UserManager<Models.User> _userManager;
 
-        public JwtService(IConfiguration configuration, UserManager<User> userManager)
+        public JwtService(IConfiguration configuration, UserManager<Models.User> userManager)
         {
             _configuration = configuration;
             _userManager = userManager;
         }
-        public async Task<string> GenerateJWTTokenAsync(User user)
+        public async Task<string> GenerateJWTTokenAsync(Models.User user)
         {
             var id = user.Id;
             var roles = await _userManager.GetRolesAsync(user);
@@ -28,27 +31,25 @@ namespace DoctorWebApi.Services
         }
 
         private string Generate(string id, IEnumerable<string> roles)
-        {
-            string jwtKey = "yJB9VKdj3vWbMdkzU8rYg5IWkICmamcnW5wO537R2VEv5N9zcmUcuLKeG71S7r4z";
+         {
+             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Df6YcHO4ZiHEMWM4IN0cnWwbM"));
+             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+             var role = roles.FirstOrDefault();
+             var claims = new[]
+             {
+                 new Claim("NameIdentifier", id),
+                 new Claim("Role", role),
+                 //new Claim(ClaimTypes.NameIdentifier, id),
+                 //new Claim(ClaimTypes.Role, role)
+             };
 
-            var claims = new List<Claim>
-            {
-                new Claim("NameIdentifier", id)
-            };
+             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
+                                              _configuration["Jwt:Audiences"],
+                                              claims,
+                                              expires: DateTime.UtcNow.AddMinutes(30),
+                                              signingCredentials: credentials);
 
-            claims.AddRange(roles.Select(role => new Claim("Role", role)));
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-              claims: claims,
-              expires: DateTime.UtcNow.AddMinutes(120),
-              signingCredentials: creds
-            );
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            return tokenHandler.WriteToken(token);
-        }
+             return new JwtSecurityTokenHandler().WriteToken(token);
+         }
     }
 }
