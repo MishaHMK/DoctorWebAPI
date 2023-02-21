@@ -57,7 +57,7 @@ namespace DoctorWebApi.Services
 
         public AppointmentDTO GetDetailsById(int Id)
         {
-            return _db.Appointments.Where(x => x.Id == Id).ToList()
+            return _db.Appointments.Where(x => x.Id == Id)
                                   .Select(c => new AppointmentDTO()
                                   {
                                       Id = c.Id,

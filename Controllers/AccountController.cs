@@ -181,13 +181,41 @@ namespace DoctorWebApi.Controllers
         }
 
 
-        // GET: api/Account/users
-        [HttpGet("users")]
-        public async Task<ActionResult<PagedList<User>>> GetAllUsers([FromQuery]UserParams userParams)
+
+        // GET: api/Account/users/id
+        [HttpGet]
+        [Route("users/{id}")]
+        public async Task<IActionResult> GetUserById(string id)
+        {
+            UserDTO user = new UserDTO();
+            user = _db.Users.Where(x => x.Id == id).Select(c => new UserDTO()
+            {
+                Id = c.Id,  
+                Name = c.Name,
+                Email = c.Email,
+                Introduction = c.Introduction,
+                Speciality = c.Speciality
+            }).SingleOrDefault();
+
+            return Ok(user);
+        }
+
+
+        // GET: api/Account/pagedDocs
+        [HttpGet("pagedDocs")]
+        public async Task<ActionResult<PagedList<User>>> GetUsers([FromQuery]UserParams userParams)
         {
             var userList = await _accService.GetUsersAsync(userParams);
             var responce = new PaginationHeader(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
             return Ok(responce);
+        }
+
+        // GET: api/Account/users
+        [HttpGet("users")]
+        public async Task<ActionResult<PagedList<User>>> GetAllUsers()
+        {
+            var userList = await _db.Users.ToListAsync();
+            return Ok(userList);
         }
 
 
@@ -206,6 +234,25 @@ namespace DoctorWebApi.Controllers
             user.LastActive = DateTime.UtcNow;
             _db.SaveChangesAsync(); 
             return Ok(result);
+        }
+
+        // PUT api/Account/Edit/id
+        [HttpPut]
+        [Route("Edit/{id}")]
+        public async Task<IActionResult> EditAccountById(string id, [FromBody] EditUserForm editUserForm)
+        {
+            var userToUpdate = _db.Users.FirstOrDefault(x => x.Id == id);
+            if (userToUpdate == null)
+            {
+                return NotFound($"User with Id = {id} not found");
+            }
+
+            userToUpdate.Name = editUserForm.Name;
+            userToUpdate.Introduction = editUserForm.Introduction;
+            userToUpdate.Speciality = editUserForm.Speciality;
+
+            await _db.SaveChangesAsync();
+            return Ok(userToUpdate);
         }
     }
 }
