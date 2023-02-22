@@ -10,5 +10,7 @@ namespace DoctorWebApi.Models
         public DateTime? LastActive { get; set; }
         public string? Introduction { get; set; }
         public string? Speciality { get; set; }
+        public List<Message>? MessagesSent { get; set; }
+        public List<Message>? MessagesReceived { get; set; }
     }
 }

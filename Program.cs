@@ -13,6 +13,9 @@ using Microsoft.Extensions.Configuration;
 using DoctorWebApi.Provider;
 using DoctorWebApi.Helpers;
 using IdentityServer4.AccessTokenValidation;
+using DoctorWebApi.Repositories;
+using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
 
 var builder = WebApplication.CreateBuilder();
 
@@ -55,6 +58,8 @@ builder.Services.AddTransient<IJwtService, JwtService>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+
 builder.Services.AddScoped<UserActivity>();
 
 builder.Services.AddControllers();
@@ -75,6 +80,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.Configure<HostUrlOptions>(builder.Configuration.GetSection("URLs"));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+
+builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
 
 builder.Services.AddIdentity<User, IdentityRole>(opt =>
 {

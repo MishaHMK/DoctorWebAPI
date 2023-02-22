@@ -91,3 +91,5 @@ C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Microsoft
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityModel.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityModel.AspNetCore.OAuth2Introspection.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityServer4.AccessTokenValidation.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\AutoMapper.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll

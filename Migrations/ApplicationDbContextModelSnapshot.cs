@@ -64,7 +64,7 @@ namespace DoctorWebApi.Migrations
                     b.ToTable("Appointments");
                 });
 
-            modelBuilder.Entity("DoctorWebApi.Models.Photo", b =>
+            modelBuilder.Entity("DoctorWebApi.Models.Message", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -72,26 +72,45 @@ namespace DoctorWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("IsMain")
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DateRead")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("MessageSent")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("RecepientDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("PublicId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Url")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId1")
+                    b.Property<string>("RecipientId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RecipientUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("SenderDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("RecipientId");
 
-                    b.ToTable("Photo");
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("DoctorWebApi.Models.User", b =>
@@ -311,13 +330,23 @@ namespace DoctorWebApi.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("DoctorWebApi.Models.Photo", b =>
+            modelBuilder.Entity("DoctorWebApi.Models.Message", b =>
                 {
-                    b.HasOne("DoctorWebApi.Models.User", "User")
-                        .WithMany("Photos")
-                        .HasForeignKey("UserId1");
+                    b.HasOne("DoctorWebApi.Models.User", "Recipient")
+                        .WithMany("MessagesReceived")
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("User");
+                    b.HasOne("DoctorWebApi.Models.User", "Sender")
+                        .WithMany("MessagesSent")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Recipient");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -373,7 +402,9 @@ namespace DoctorWebApi.Migrations
 
             modelBuilder.Entity("DoctorWebApi.Models.User", b =>
                 {
-                    b.Navigation("Photos");
+                    b.Navigation("MessagesReceived");
+
+                    b.Navigation("MessagesSent");
                 });
 #pragma warning restore 612, 618
         }

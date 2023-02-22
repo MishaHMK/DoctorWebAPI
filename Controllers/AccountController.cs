@@ -1,5 +1,4 @@
-﻿using DoctorWebApi.Extensions;
-using DoctorWebApi.Helpers;
+﻿using DoctorWebApi.Helpers;
 using DoctorWebApi.Interfaces;
 using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -206,7 +205,7 @@ namespace DoctorWebApi.Controllers
         public async Task<ActionResult<PagedList<User>>> GetUsers([FromQuery]UserParams userParams)
         {
             var userList = await _accService.GetUsersAsync(userParams);
-            var responce = new PaginationHeader(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
+            var responce = new PaginationHeader<User>(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
             return Ok(responce);
         }
 
