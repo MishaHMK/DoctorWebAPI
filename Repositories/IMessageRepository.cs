@@ -8,8 +8,8 @@ namespace DoctorWebApi.Repositories
         void AddMessage(Message message);
         void DeleteMessage(Message message);
         Task<Message> GetMessage(int id); 
-        Task<PagedList<Message>> GetMessagesForUser(MessageParams messageParams, string userId);
-        Task<IEnumerable<Message>> GetMessageThread(string currentUserName, string recipientUserName);
+        Task<PagedList<MessageDTO>> GetMessagesForUser(MessageParams messageParams, string userId);
+        Task<IEnumerable<MessageDTO>> GetMessageThread(string currentUserName, string recipientUserName);
         Task<bool> SaveAllAsync();
 
     }

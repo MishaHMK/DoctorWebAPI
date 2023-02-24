@@ -16,6 +16,7 @@ using IdentityServer4.AccessTokenValidation;
 using DoctorWebApi.Repositories;
 using AutoMapper;
 using Microsoft.AspNetCore.Hosting;
+using DoctorWebApi.Mapper;
 
 var builder = WebApplication.CreateBuilder();
 
@@ -49,6 +50,13 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddSession();
+
+builder.Services.AddAutoMapper(typeof(Program));
+
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new AllMappersProfile());
+});
 
 builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 

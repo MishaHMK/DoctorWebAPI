@@ -1,4 +1,5 @@
-﻿using AutoMapper.QueryableExtensions;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using DoctorWebApi.Helpers;
 using DoctorWebApi.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,9 +10,11 @@ namespace DoctorWebApi.Repositories
     public class MessageRepository : IMessageRepository
     {
         private readonly ApplicationDbContext _db;
-        public MessageRepository(ApplicationDbContext db)
+        private readonly IMapper _mapper;
+        public MessageRepository(ApplicationDbContext db, IMapper mapper)
         {
             _db = db;
+            _mapper = mapper;
         }
 
         public void AddMessage(Message message)
@@ -29,7 +32,7 @@ namespace DoctorWebApi.Repositories
             return await _db.Messages.FindAsync(id);
         }
 
-        public async Task<PagedList<Message>> GetMessagesForUser(MessageParams messageParams, string userId)
+        public async Task<PagedList<MessageDTO>> GetMessagesForUser(MessageParams messageParams, string userId)
         {
             var query = _db.Messages
                            .OrderByDescending(m => m.MessageSent)
@@ -42,12 +45,12 @@ namespace DoctorWebApi.Repositories
                 _ => query.Where(u => u.RecipientId == userId && u.DateRead == null)
             };
 
-            var messages = query;
+            var messages = query.ProjectTo<MessageDTO>(_mapper.ConfigurationProvider);
 
-            return await PagedList<Message>.CreateAsync(messages, messageParams.PageNumber, messageParams.PageSize, query.Count());
+            return await PagedList<MessageDTO>.CreateAsync(messages, messageParams.PageNumber, messageParams.PageSize, query.Count());
         }
 
-        public async Task<IEnumerable<Message>> GetMessageThread(string currentUserId, string recipientId)
+        public async Task<IEnumerable<MessageDTO>> GetMessageThread(string currentUserId, string recipientId)
         {
             var messages = await _db.Messages
                            .Where(m => m.RecipientId == currentUserId &&
@@ -72,7 +75,7 @@ namespace DoctorWebApi.Repositories
                 await _db.SaveChangesAsync();
             }
 
-            return messages;   
+            return _mapper.Map<IEnumerable<MessageDTO>>(messages);
 
         }
 

@@ -15,25 +15,28 @@ namespace DoctorWebApi.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly IMessageRepository _messageRepository;
+        private readonly IMapper _mapper;
 
-        public MessagesController(ApplicationDbContext db, IMessageRepository messageRepository) 
+        public MessagesController(ApplicationDbContext db, IMessageRepository messageRepository, IMapper mapper) 
         {
             _db = db;
-            _messageRepository = messageRepository;   
+            _messageRepository = messageRepository;
+            _mapper = mapper;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Models.Message>> CreateMessage(CreateMessageDTO createMessageDTO, string userId)
+        public async Task<ActionResult<Models.Message>> CreateMessage(string content, string senderId, string recipientId)
         {
-            var userName = _db.Users.Where(u => u.Id == userId).Select(u => u.Name).First().ToString();
+            var senderName = _db.Users.Where(u => u.Id == senderId).Select(u => u.Name).First().ToString();
+            var recipientName = _db.Users.Where(u => u.Id == recipientId).Select(u => u.Name).First().ToString();
 
-            if (userName == createMessageDTO.RecipientUsername)
+            if (senderName == recipientName)
             {
                 return BadRequest("You cannot send messages to yourself!");
             }
 
-            var sender = await _db.Users.SingleOrDefaultAsync(x => x.Name == userName);
-            var recepient = await _db.Users.SingleOrDefaultAsync(x => x.Name == createMessageDTO.RecipientUsername);
+            var sender = await _db.Users.SingleOrDefaultAsync(x => x.Name == senderName);
+            var recepient = await _db.Users.SingleOrDefaultAsync(x => x.Name == recipientName);
 
             if(recepient == null) return NotFound("No Recepient");
 
@@ -43,28 +46,28 @@ namespace DoctorWebApi.Controllers
                 Recipient = recepient,
                 SenderUserName = sender.Name,
                 RecipientUserName = recepient.Name,
-                Content = createMessageDTO.Content  
+                Content = content
             };
 
             _messageRepository.AddMessage(message);
 
-            if(await _messageRepository.SaveAllAsync()) return Ok(message);
+            if(await _messageRepository.SaveAllAsync()) return Ok(_mapper.Map<MessageDTO>(message));
 
             return BadRequest("Failed to send message");
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedList<Models.Message>>> GetMessagesForUser([FromQuery] MessageParams messageParams, string userId)
+        public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesForUser([FromQuery] MessageParams messageParams, string userId)
         {
             var messages = await _messageRepository.GetMessagesForUser(messageParams, userId);
 
-            var responce = new PaginationHeader<Models.Message>(messages, messages.CurrentPage, messages.PageSize, messages.TotalCount);
+            var responce = new PaginationHeader<MessageDTO>(messages, messages.CurrentPage, messages.PageSize, messages.TotalCount);
 
             return Ok(responce);
         }
 
         [HttpGet("thread/{un_send}/{un_rec}")]
-        public async Task<ActionResult<PagedList<Models.Message>>> GetMessagesForUser(string un_send, string un_rec)
+        public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesForUser(string un_send, string un_rec)
         {
 
             var responce = await _messageRepository.GetMessageThread(un_send, un_rec);
