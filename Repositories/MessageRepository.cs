@@ -34,9 +34,7 @@ namespace DoctorWebApi.Repositories
 
         public async Task<PagedList<MessageDTO>> GetMessagesForUser(MessageParams messageParams, string userId)
         {
-            var query = _db.Messages
-                           .OrderByDescending(m => m.MessageSent)
-                           .AsQueryable();
+            var query = _db.Messages.OrderByDescending(m => m.MessageSent).AsQueryable();                    
 
             query = messageParams.Container switch
             {
@@ -50,20 +48,20 @@ namespace DoctorWebApi.Repositories
             return await PagedList<MessageDTO>.CreateAsync(messages, messageParams.PageNumber, messageParams.PageSize, query.Count());
         }
 
-        public async Task<IEnumerable<MessageDTO>> GetMessageThread(string currentUserId, string recipientId)
+        public async Task<IEnumerable<MessageDTO>> GetMessageThread(string currentUserName, string recipientUserName)
         {
             var messages = await _db.Messages
-                           .Where(m => m.RecipientId == currentUserId &&
+                           .Where(m => m.RecipientUserName == currentUserName &&
                                   m.RecepientDeleted == false &&
-                                  m.SenderId == recipientId ||
-                                  m.RecipientId == recipientId &&
-                                  m.SenderId == currentUserId && 
+                                  m.SenderUserName == recipientUserName ||
+                                  m.RecipientUserName == recipientUserName &&
+                                  m.SenderUserName == currentUserName && 
                                   m.SenderDeleted == false)
                            .OrderBy(m => m.MessageSent) 
                            .ToListAsync();
 
             var unreadMessages = messages.Where(m => m.DateRead == null &&
-                                 m.RecipientId == currentUserId).ToList();
+                                 m.RecipientUserName == currentUserName).ToList();
 
             if (unreadMessages.Any())
             {

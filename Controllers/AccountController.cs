@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Web;
 
 namespace DoctorWebApi.Controllers
@@ -111,41 +112,50 @@ namespace DoctorWebApi.Controllers
         {
             await CheckRoles();
 
-            if (ModelState.IsValid) {
-                var user = new User
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    Name = model.Name 
-                };
-                
-                var result = await _userManager.CreateAsync(user, model.Password);
+            var userName = _db.Users.Where(u => u.Name == model.Name).Select(x => x.Name).FirstOrDefault();
 
-                if (result.Succeeded)
+            if (userName == null)
+            {
+                if (ModelState.IsValid)
                 {
-                    await _userManager.AddToRoleAsync(user, model.RoleName);
-                    await _signInManager.SignInAsync(user, isPersistent: true);
-                    user.Speciality = model.Speciality;
-                    try
+                    var user = new User
                     {
-                        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        var encoded = HttpUtility.UrlEncode(token);
-                        string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
-                        await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
-                                                 $"Follow the: <br/><a href={url}>link to confirm</a>");
-                        await _db.SaveChangesAsync();   
-                    }
-                    catch (Exception)
+                        UserName = model.Email,
+                        Email = model.Email,
+                        Name = model.Name
+                    };
+
+                    var result = await _userManager.CreateAsync(user, model.Password);
+
+                    if (result.Succeeded)
                     {
-                        await _userManager.DeleteAsync(user);
-                        throw;
+                        await _userManager.AddToRoleAsync(user, model.RoleName);
+                        await _signInManager.SignInAsync(user, isPersistent: true);
+                        user.Speciality = model.Speciality;
+                        try
+                        {
+                            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                            var encoded = HttpUtility.UrlEncode(token);
+                            string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
+                            await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
+                                                     $"Follow the: <br/><a href={url}>link to confirm</a>");
+                            await _db.SaveChangesAsync();
+                        }
+                        catch (Exception)
+                        {
+                            await _userManager.DeleteAsync(user);
+                            throw;
+                        }
+
+                        return NoContent();
                     }
 
-                    return NoContent();
+                    return BadRequest("Register failed");
+
                 }
             }
-
-            return BadRequest("Register failed");
+     
+            return BadRequest("Name is already exists");
         }
 
 

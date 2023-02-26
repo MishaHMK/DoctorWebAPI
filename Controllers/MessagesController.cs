@@ -67,7 +67,7 @@ namespace DoctorWebApi.Controllers
         }
 
         [HttpGet("thread/{un_send}/{un_rec}")]
-        public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesForUser(string un_send, string un_rec)
+        public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesThread(string un_send, string un_rec)
         {
 
             var responce = await _messageRepository.GetMessageThread(un_send, un_rec);
