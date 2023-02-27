@@ -25,18 +25,18 @@ namespace DoctorWebApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Models.Message>> CreateMessage(string content, string senderId, string recipientId)
+        public async Task<ActionResult<Models.Message>> CreateMessage(CreateMessage createParams)
         {
-            var senderName = _db.Users.Where(u => u.Id == senderId).Select(u => u.Name).First().ToString();
-            var recipientName = _db.Users.Where(u => u.Id == recipientId).Select(u => u.Name).First().ToString();
+            //var senderName = _db.Users.Where(u => u.Id == senderId).Select(u => u.Name).First().ToString();
+            //var recipientName = _db.Users.Where(u => u.Id == recipientId).Select(u => u.Name).First().ToString();
 
-            if (senderName == recipientName)
+            if (createParams.SenderName == createParams.RecipientName)
             {
                 return BadRequest("You cannot send messages to yourself!");
             }
 
-            var sender = await _db.Users.SingleOrDefaultAsync(x => x.Name == senderName);
-            var recepient = await _db.Users.SingleOrDefaultAsync(x => x.Name == recipientName);
+            var sender = await _db.Users.SingleOrDefaultAsync(x => x.Name == createParams.SenderName);
+            var recepient = await _db.Users.SingleOrDefaultAsync(x => x.Name == createParams.RecipientName);
 
             if(recepient == null) return NotFound("No Recepient");
 
@@ -46,7 +46,7 @@ namespace DoctorWebApi.Controllers
                 Recipient = recepient,
                 SenderUserName = sender.Name,
                 RecipientUserName = recepient.Name,
-                Content = content
+                Content = createParams.Content
             };
 
             _messageRepository.AddMessage(message);
