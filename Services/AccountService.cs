@@ -1,6 +1,8 @@
-﻿using DoctorWebApi.Helpers;
+﻿using Doctor.DataAcsess;
+using Doctor.DataAcsess.Entities;
+using Doctor.DataAcsess.Helpers;
+using DoctorWebApi.Helpers;
 using DoctorWebApi.Interfaces;
-using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;

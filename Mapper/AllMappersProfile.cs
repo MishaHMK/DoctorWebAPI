@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
-using DoctorWebApi.Models;
-using System.Security.AccessControl;
+using Doctor.DataAcsess.Entities;
 
 namespace DoctorWebApi.Mapper
 {

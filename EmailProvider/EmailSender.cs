@@ -3,18 +3,18 @@ using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Newtonsoft.Json.Linq;
 
-namespace DoctorWebApi.Utility
+namespace DoctorWebApi.EmailProvider
 {
     public class EmailSender : IEmailSender
     {
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            MailjetClient client = 
-                new MailjetClient("34916986bf0ecf511a8d4ad5f2e68b5b", 
+            MailjetClient client =
+                new MailjetClient("34916986bf0ecf511a8d4ad5f2e68b5b",
                                   "e6a6d5ca628047e40b5babd5c5a7fb26")
-            {
-                
-            };
+                {
+
+                };
 
             MailjetRequest request = new MailjetRequest
             {

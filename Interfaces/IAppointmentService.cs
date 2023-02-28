@@ -1,12 +1,10 @@
-﻿using DoctorWebApi.Helpers;
-using DoctorWebApi.Models;
-using System.Globalization;
+﻿using Doctor.DataAcsess.Entities;
 
 namespace DoctorWebApi.Interfaces
 {
     public interface IAppointmentService
     {
-        public List<Doctor> GetDoctorList();
+        public List<Doctor.DataAcsess.Entities.Doctor> GetDoctorList();
         public List<Patient> GetPatientList();
         public Task Add(Appointment model);
         public List<AppointmentDTO> DoctorEventsById(string doctorId);

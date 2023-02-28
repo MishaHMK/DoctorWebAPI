@@ -1,9 +1,6 @@
-﻿using Azure;
-using Azure.Core.Pipeline;
+﻿using Doctor.DataAcsess;
+using Doctor.DataAcsess.Entities;
 using DoctorWebApi.Interfaces;
-using DoctorWebApi.Models;
-using IdentityServer4.AccessTokenValidation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,28 +1,25 @@
 ﻿using DoctorWebApi.Interfaces;
-using DoctorWebApi.Models;
 using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Doctor.DataAcsess.Entities;
 
 namespace DoctorWebApi.Services
 {
     public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
-        private readonly UserManager<Models.User> _userManager;
+        private readonly UserManager<Doctor.DataAcsess.Entities.User> _userManager;
 
-        public JwtService(IConfiguration configuration, UserManager<Models.User> userManager)
+        public JwtService(IConfiguration configuration, UserManager<Doctor.DataAcsess.Entities.User> userManager)
         {
             _configuration = configuration;
             _userManager = userManager;
         }
-        public async Task<string> GenerateJWTTokenAsync(Models.User user)
+        public async Task<string> GenerateJWTTokenAsync(Doctor.DataAcsess.Entities.User user)
         {
             var id = user.Id;
             var roles = await _userManager.GetRolesAsync(user);
@@ -38,9 +35,7 @@ namespace DoctorWebApi.Services
              var claims = new[]
              {
                  new Claim("NameIdentifier", id),
-                 new Claim("Role", role),
-                 //new Claim(ClaimTypes.NameIdentifier, id),
-                 //new Claim(ClaimTypes.Role, role)
+                 new Claim("Role", role)
              };
 
              var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],

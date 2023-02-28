@@ -1,7 +1,5 @@
-﻿using DoctorWebApi.Interfaces;
-using DoctorWebApi.Models;
-using DoctorWebApi.Services;
-using Microsoft.AspNetCore.Authorization;
+﻿using Doctor.DataAcsess;
+using Doctor.DataAcsess.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 

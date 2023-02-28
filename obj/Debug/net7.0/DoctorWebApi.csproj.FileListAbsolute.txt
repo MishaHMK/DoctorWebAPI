@@ -15,7 +15,6 @@ C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWeb
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWebApi.AssemblyInfoInputs.cache
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWebApi.AssemblyInfo.cs
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWebApi.csproj.CoreCompileInputs.cache
-C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWebApi.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWebApi.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\staticwebassets\msbuild.DoctorWebApi.Microsoft.AspNetCore.StaticWebAssets.props
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\staticwebassets\msbuild.build.DoctorWebApi.props
@@ -93,3 +92,12 @@ C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityM
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\IdentityServer4.AccessTokenValidation.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\AutoMapper.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\System.Web.Mvc.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\System.Web.Razor.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\System.Web.Helpers.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\System.Web.WebPages.Deployment.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\System.Web.WebPages.Razor.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\System.Web.WebPages.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Microsoft.Web.Infrastructure.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.DataAcsess.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.DataAcsess.pdb

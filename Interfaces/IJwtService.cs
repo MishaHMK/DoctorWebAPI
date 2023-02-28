@@ -1,4 +1,4 @@
-﻿using DoctorWebApi.Models;
+﻿using Doctor.DataAcsess.Entities;
 using static DoctorWebApi.Services.JwtService;
 
 namespace DoctorWebApi.Interfaces
@@ -6,6 +6,5 @@ namespace DoctorWebApi.Interfaces
     public interface IJwtService
     {
         Task<string> GenerateJWTTokenAsync(User user);
-        //Task<string> GenerateJWTNewTokenAsync(User user);
     }
 }

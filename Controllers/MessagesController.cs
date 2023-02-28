@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
-using DoctorWebApi.Helpers;
-using DoctorWebApi.Models;
-using DoctorWebApi.Repositories;
-using Mailjet.Client.Resources;
-using Microsoft.AspNetCore.Http;
+using Doctor.DataAcsess;
+using Doctor.DataAcsess.Entities;
+using Doctor.DataAcsess.Helpers;
+using Doctor.DataAcsess.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,11 +24,8 @@ namespace DoctorWebApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Models.Message>> CreateMessage(CreateMessage createParams)
+        public async Task<ActionResult<Message>> CreateMessage(CreateMessage createParams)
         {
-            //var senderName = _db.Users.Where(u => u.Id == senderId).Select(u => u.Name).First().ToString();
-            //var recipientName = _db.Users.Where(u => u.Id == recipientId).Select(u => u.Name).First().ToString();
-
             if (createParams.SenderName == createParams.RecipientName)
             {
                 return BadRequest("You cannot send messages to yourself!");
@@ -40,7 +36,7 @@ namespace DoctorWebApi.Controllers
 
             if(recepient == null) return NotFound("No Recepient");
 
-            var message = new Models.Message
+            var message = new Message
             {
                 Sender = sender,
                 Recipient = recepient,
@@ -74,5 +70,26 @@ namespace DoctorWebApi.Controllers
 
             return Ok(responce);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteMessage(int id, string un_send)
+        {
+            var message = await _messageRepository.GetMessage(id);
+
+            if (message.Sender.Name != un_send && message.Recipient.Name != un_send)
+                return Unauthorized();
+
+            if (message.Sender.Name == un_send) message.SenderDeleted = true;
+
+            if (message.Recipient.Name == un_send) message.RecepientDeleted = true;
+
+            if (message.SenderDeleted || message.RecepientDeleted)
+                _messageRepository.DeleteMessage(message);
+
+            if (await _messageRepository.SaveAllAsync()) return Ok();
+
+            return BadRequest("Problem deleting the message");
+        }
+
     }
 }

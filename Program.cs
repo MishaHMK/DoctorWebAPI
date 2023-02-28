@@ -1,21 +1,17 @@
-using DoctorWebApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using DoctorWebApi.Interfaces;
 using DoctorWebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using DoctorWebApi.Utility;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.Extensions.Configuration;
-using DoctorWebApi.Provider;
-using DoctorWebApi.Helpers;
 using IdentityServer4.AccessTokenValidation;
-using DoctorWebApi.Repositories;
 using AutoMapper;
-using Microsoft.AspNetCore.Hosting;
+using Doctor.DataAcsess.Interfaces;
+using Doctor.DataAcsess.Entities;
+using Doctor.DataAcsess;
+using DoctorWebApi.EmailProvider;
 using DoctorWebApi.Mapper;
 
 var builder = WebApplication.CreateBuilder();
@@ -67,8 +63,6 @@ builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-
-builder.Services.AddScoped<UserActivity>();
 
 builder.Services.AddControllers();
 

@@ -1,6 +1,7 @@
-﻿using DoctorWebApi.Helpers;
+﻿using Doctor.DataAcsess;
+using Doctor.DataAcsess.Entities;
+using DoctorWebApi.Helpers;
 using DoctorWebApi.Interfaces;
-using DoctorWebApi.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -74,12 +75,12 @@ namespace DoctorWebApi.Services
                                   }).SingleOrDefault();
         }
 
-        public List<Doctor> GetDoctorList()
+        public List<Doctor.DataAcsess.Entities.Doctor> GetDoctorList()
         {
             var doctors = (from user in _db.Users
                            join userRoles in _db.UserRoles on user.Id equals userRoles.UserId
                            join roles in _db.Roles.Where(x => x.Name == Roles.Doctor) on userRoles.RoleId equals roles.Id
-                           select new Doctor
+                           select new Doctor.DataAcsess.Entities.Doctor
                            {
                                Id = user.Id,
                                Name = user.Name

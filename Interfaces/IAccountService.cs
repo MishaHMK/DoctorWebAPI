@@ -1,5 +1,6 @@
-﻿using DoctorWebApi.Helpers;
-using DoctorWebApi.Models;
+﻿using Doctor.DataAcsess.Entities;
+using Doctor.DataAcsess.Helpers;
+using DoctorWebApi.Helpers;
 
 namespace DoctorWebApi.Interfaces
 {
