@@ -4,12 +4,14 @@ using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Models;
 using DoctorWebApi.Helpers;
 using DoctorWebApi.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Web;
 
 namespace DoctorWebApi.Controllers
@@ -163,20 +165,21 @@ namespace DoctorWebApi.Controllers
         // POST api/Account/authenticate
         [HttpPost]
         [Route("authenticate")]
-        public async Task<IActionResult> Authenticate(Login model)
+        public async Task<IActionResult> Authenticate([FromBody] Login model)
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, true);
+                var user = await _userManager.FindByNameAsync(model.Email);
                 if (result.Succeeded)
                 {
-                    var user = await _userManager.FindByNameAsync(model.Email);
                     var generatedToken = await _jwtService.GenerateJWTTokenAsync(user);
                     user.LastActive = DateTime.UtcNow;
-                    _db.SaveChangesAsync(); 
+                    await _db.SaveChangesAsync();
 
                     return Ok(new { token = generatedToken });
                 }
+
                 return Unauthorized();
             }
 

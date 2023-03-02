@@ -13,39 +13,15 @@ using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess;
 using DoctorWebApi.EmailProvider;
 using DoctorWebApi.Mapper;
+using Microsoft.OpenApi.Models;
+using DoctorWebApi.Helper;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-})
-    .AddJwtBearer(o =>
-    {
-        o.SaveToken = true;
-        o.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Df6YcHO4ZiHEMWM4IN0cnWwbM"))
-        };
-        o.Events = new JwtBearerEvents()
-        {
-            OnAuthenticationFailed = async context =>
-            {
-                var ex = context.Exception;
-            }
-        };
-    });
-
-builder.Services.AddAuthorization();
-
-builder.Services.AddSession();
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -53,6 +29,19 @@ var mapperConfig = new MapperConfiguration(mc =>
 {
     mc.AddProfile(new AllMappersProfile());
 });
+
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+        {
+            p.WithOrigins(
+                "http://localhost:3000"
+            ); 
+            p.AllowAnyHeader();
+            p.AllowAnyMethod();
+            p.AllowCredentials();
+
+            p.SetPreflightMaxAge(TimeSpan.FromDays(1));
+        }
+));
 
 builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 
@@ -77,11 +66,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
 builder.Services.Configure<HostUrlOptions>(builder.Configuration.GetSection("URLs"));
-
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
@@ -95,9 +80,37 @@ builder.Services.AddIdentity<User, IdentityRole>(opt =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(o =>
+{
+    o.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme.\nExample: 'Bearer {your token}'"
+    });
+});
+
+
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Events.OnRedirectToLogin = (context) =>
+        {
+            context.Response.StatusCode = 401;
+            return Task.CompletedTask;
+        };
+    });
+
+builder.Services.ConfigureOptions<JwtOptionsSetup>();
+builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
+
 
 var app = builder.Build();
 
@@ -109,29 +122,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseRouting();
-
-app.UseCors(x => x
-           .AllowAnyOrigin()
-           .AllowAnyMethod()
-           .AllowAnyHeader());
-
-app.UseDefaultFiles();
-
-app.UseStaticFiles();
-
-//app.UseSession();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
 
-//app.MapControllers();
+app.UseHsts();
+app.UseCors();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+app.MapControllers();
 
 app.Run();

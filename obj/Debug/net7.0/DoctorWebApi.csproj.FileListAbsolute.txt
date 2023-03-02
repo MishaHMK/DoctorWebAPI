@@ -101,3 +101,4 @@ C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\System.We
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Microsoft.Web.Infrastructure.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.DataAcsess.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.DataAcsess.pdb
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWebApi.MvcApplicationPartsAssemblyInfo.cs

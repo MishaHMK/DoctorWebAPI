@@ -1,8 +1,10 @@
 ﻿using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
 using DoctorWebApi.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace DoctorWebApi.Controllers
 {
@@ -78,6 +80,7 @@ namespace DoctorWebApi.Controllers
         // GET api/Appointment/GetCalendarData
         [HttpGet]
         [Route("GetCalendarData")]
+        //[Authorize("Doctor" = "Doctor")]
         public async Task<IActionResult> GetCalendarData(string role, string? doctorId = " ", string? patientId = " ")
         {
            List<AppointmentDTO> response = new List<AppointmentDTO>();
