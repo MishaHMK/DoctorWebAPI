@@ -1,27 +1,24 @@
-﻿using Doctor.DataAcsess;
+﻿using Doctor.BLL.Interface;
+using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
-using DoctorWebApi.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 
 namespace DoctorWebApi.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AppointmentController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
         private readonly ApplicationDbContext _db;
-        private readonly IEmailSender _emailSender;
 
-        public AppointmentController(IAppointmentService appointmentService, ApplicationDbContext db, IEmailSender emailSender)
+        public AppointmentController(IAppointmentService appointmentService, ApplicationDbContext db)
         {
-            _appointmentService = appointmentService;
             _db = db;
-            _emailSender = emailSender;
+            _appointmentService = appointmentService;
         }
 
         // GET: api/Appointment/doctors
@@ -49,29 +46,8 @@ namespace DoctorWebApi.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var startDate = Convert.ToDateTime(model.StartDate);
-            var endDate = Convert.ToDateTime(model.StartDate).AddMinutes(Convert.ToDouble(60));
-            var patient = _db.Users.FirstOrDefault(u => u.Id == model.PatientId);
-            var doctor = _db.Users.FirstOrDefault(u => u.Id == model.DoctorId);
 
-            Appointment appointment = new Appointment()
-            {
-                Title = model.Title,
-                Description = model.Description,
-                StartDate = startDate,
-                EndDate = endDate,
-                Duration = 60,
-                DoctorId = model.DoctorId,
-                PatientId = model.PatientId,
-                IsApproved = false,
-                AdminId = model.AdminId
-            };
-
-            await _emailSender.SendEmailAsync(doctor.Email, "Appointment Created", 
-                                              $"Your appointment with {patient.Name} has been created and in pending status");
-            await _emailSender.SendEmailAsync(patient.Email, "Appointment Created",
-                                              $"Your appointment with {doctor.Name} has been created and in pending status");
-            await _appointmentService.Add(appointment);
+            var appointment = _appointmentService.Add(model);
 
             return Ok(appointment);
         }
@@ -80,7 +56,6 @@ namespace DoctorWebApi.Controllers
         // GET api/Appointment/GetCalendarData
         [HttpGet]
         [Route("GetCalendarData")]
-        //[Authorize("Doctor" = "Doctor")]
         public async Task<IActionResult> GetCalendarData(string role, string? doctorId = " ", string? patientId = " ")
         {
            List<AppointmentDTO> response = new List<AppointmentDTO>();
@@ -117,10 +92,10 @@ namespace DoctorWebApi.Controllers
             AppointmentDTO response = new AppointmentDTO();
             try
             {
-               response = _appointmentService.GetDetailsById(id);
+               response = await _appointmentService.GetDetailsById(id);
                return Ok(response);
             }
-            catch (Exception e)
+            catch 
             {
                 return BadRequest("Exceptional error!");
             }
@@ -152,42 +127,18 @@ namespace DoctorWebApi.Controllers
             return Ok(appointmentToUpdate);
         }
 
+
         // PATCH  api/Appointment/Approve/id
         [HttpPatch]
         [Route("Approve/{id}/{status}")]
         public async Task<IActionResult> ApproveAppointmentById(int id, bool status) { 
-            var appointmentToUpdate = _db.Appointments.FirstOrDefault(x => x.Id == id);
+            var appointmentToUpdate = await _appointmentService.ApproveAppointmentById(id, status);   
 
             if (appointmentToUpdate == null)
             {
                 return NotFound();
             }
 
-            appointmentToUpdate.IsApproved = status;
-            var patient = _db.Users.FirstOrDefault(u => u.Id == appointmentToUpdate.PatientId);
-            var doctor = _db.Users.FirstOrDefault(u => u.Id == appointmentToUpdate.DoctorId);
-
-
-            if(status == true)
-            {
-                await _emailSender.SendEmailAsync(doctor.Email, "Appointment Approved",
-                                           $"You have approved appointment #{appointmentToUpdate.Id} with " +
-                                           $"{patient.Name}");
-                await _emailSender.SendEmailAsync(patient.Email, "Appointment Approved",
-                                                  $"Your appointment #{appointmentToUpdate.Id} with " +
-                                                  $"{doctor.Name} has been approved");
-            }
-            else if (status == false)
-            {
-                await _emailSender.SendEmailAsync(doctor.Email, "Appointment Cancelled",
-                                                            $"You have cancelled appointment #{appointmentToUpdate.Id} with " +
-                                                            $"{patient.Name}");
-                await _emailSender.SendEmailAsync(patient.Email, "Appointment Cancelled",
-                                                  $"Your appointment #{appointmentToUpdate.Id} with " +
-                                                  $"{doctor.Name} has been cancelled");
-            }
-
-            await _db.SaveChangesAsync();
             return Ok(appointmentToUpdate);
         }
 
@@ -196,20 +147,8 @@ namespace DoctorWebApi.Controllers
         [Route("Delete/{id}")]
         public async Task<IActionResult> DeleteAppointmentById(int id)
         {
-            var appointmentToDelete = _db.Appointments.FirstOrDefault(x => x.Id == id);
-            _db.Appointments.Remove(appointmentToDelete);
+            await _appointmentService.DeleteAppointmentById(id);
 
-            var patient = _db.Users.FirstOrDefault(u => u.Id == appointmentToDelete.PatientId);
-            var doctor = _db.Users.FirstOrDefault(u => u.Id == appointmentToDelete.DoctorId);
-
-            await _emailSender.SendEmailAsync(doctor.Email, "Appointment Deleted",
-                                             $"Your appointment #{appointmentToDelete.Id} with " +
-                                             $"{patient.Name} has been deleted");
-            await _emailSender.SendEmailAsync(patient.Email, "Appointment Deleted",
-                                              $"Your appointment #{appointmentToDelete.Id} with " +
-                                              $"{doctor.Name} has been deleted");
-
-            _db.SaveChanges();
             return Ok("Removed");
 
         }

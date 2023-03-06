@@ -102,3 +102,5 @@ C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Microsoft
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.DataAcsess.dll
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.DataAcsess.pdb
 C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\obj\Debug\net7.0\DoctorWebApi.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.BLL.dll
+C:\Users\gumen\source\repos\DoctorWebApi\DoctorWebApi\bin\Debug\net7.0\Doctor.BLL.pdb

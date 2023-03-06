@@ -1,15 +1,14 @@
-﻿using Doctor.DataAcsess;
+﻿using Doctor.BLL.Interface;
+using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Models;
 using DoctorWebApi.Helpers;
-using DoctorWebApi.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Web;
@@ -20,92 +19,50 @@ namespace DoctorWebApi.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
-        private readonly IJwtService _jwtService;
         private readonly IAccountService _accService;
         private readonly IEmailSender _emailSender;
-        UserManager<User> _userManager;
-        SignInManager<User> _signInManager;
-        RoleManager<IdentityRole> _roleManager;
+        private readonly IJWTService _jWTManager;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly HostUrlOptions _hostUrl;
 
-        public AccountController(ApplicationDbContext context, UserManager<User> userManager,
-            SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager,
-            IJwtService jwtService, IOptions<HostUrlOptions> options, 
-            IEmailSender emailSender, IAccountService accService)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager,
+            IEmailSender emailSender, IAccountService accService, IJWTService jWTManager)
         {
-            _db = context;
             _signInManager = signInManager;
             _userManager = userManager;
-            _roleManager = roleManager;
-            _jwtService = jwtService;
-            _hostUrl = options.Value;
             _emailSender = emailSender;
             _accService = accService;
+            _jWTManager = jWTManager;
         }
 
         public string BackEndApiURL => _hostUrl.BackEnd + "/api";
 
         // GET api/Account/roles
         [HttpGet("roles")]
-        public async Task<List<string>> CheckRoles()
+        public async Task<IActionResult> CheckRoles()
         {
-            var roles = new[]
-{
-                Roles.Admin,
-                Roles.Doctor,
-                Roles.Patient
-            };
+            var roleList =  _accService.GetRoles();
 
-            foreach (var role in roles)
-            {
-                if (!await _roleManager.RoleExistsAsync(role))
-                {
-                    var idRole = new IdentityRole(role);
-                    await _roleManager.CreateAsync(idRole);
-                }
-            }
-
-            var identityRoles = _roleManager.Roles.ToList();
-
-            var roleList = new List<string>();
-
-            foreach (var role in identityRoles)
-            {
-                roleList.Add(role.Name);
-            }
-
-            return roleList;
+            return Ok(roleList);
         }
 
         // GET api/Account/times
         [HttpGet("times")]
-        public async Task<List<string>> GetTimes()
+        public async Task<IActionResult> GetTimes()
         {
-            var times = Timestamps.GetTimesForDropDown(); 
-            var timeList = new List<string>();
+            var timeList = _accService.GetTimes();
 
-            foreach (var time in times)
-            {
-                timeList.Add(time.Text);
-            }
-
-            return timeList;
+            return Ok(timeList);
         }
 
         // GET api/Account/specialities
         [HttpGet("specialities")]
-        public async Task<List<string>> GetSpecialities()
+        public async Task<IActionResult> GetSpecialities()
         {
-            var specs = Specialities.GetSpecialitiesForDropDown();
-            var list = new List<string>();
+            var specList = _accService.GetSpecialities();
 
-            foreach (var s in specs)
-            {
-                list.Add(s.Text);
-            }
-
-            return list;
+            return Ok(specList);
         }
 
         // POST api/Account/register
@@ -115,8 +72,8 @@ namespace DoctorWebApi.Controllers
         {
             await CheckRoles();
 
-            var userName = _db.Users.Where(u => u.Name == model.Name).Select(x => x.Name).FirstOrDefault();
-
+            var userName = _accService.GetUsername(model.Name);
+            
             if (userName == null)
             {
                 if (ModelState.IsValid)
@@ -142,7 +99,8 @@ namespace DoctorWebApi.Controllers
                             string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
                             await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
                                                      $"Follow the: <br/><a href={url}>link to confirm</a>");
-                            await _db.SaveChangesAsync();
+
+                            _accService.SaveAllAsync();
                         }
                         catch (Exception)
                         {
@@ -161,29 +119,27 @@ namespace DoctorWebApi.Controllers
             return BadRequest("Name is already exists");
         }
 
-
         // POST api/Account/authenticate
+        [AllowAnonymous]
         [HttpPost]
         [Route("authenticate")]
-        public async Task<IActionResult> Authenticate([FromBody] Login model)
+        public async Task<ActionResult> Authenticate([FromBody] Login model)
         {
-            if (ModelState.IsValid)
+            var user = await _userManager.FindByNameAsync(model.Email);
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var token = _jWTManager.Authenticate(user.Id, roles);
+
+            if (token == null)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, true);
-                var user = await _userManager.FindByNameAsync(model.Email);
-                if (result.Succeeded)
-                {
-                    var generatedToken = await _jwtService.GenerateJWTTokenAsync(user);
-                    user.LastActive = DateTime.UtcNow;
-                    await _db.SaveChangesAsync();
-
-                    return Ok(new { token = generatedToken });
-                }
-
                 return Unauthorized();
             }
 
-            return Unauthorized();
+            user.LastActive = DateTime.UtcNow;
+            _accService.SaveAllAsync();
+
+            return Ok(token);
         }
 
         [HttpGet("logout")]
@@ -193,30 +149,21 @@ namespace DoctorWebApi.Controllers
             return Ok();
         }
 
-
-
         // GET: api/Account/users/id
         [HttpGet]
         [Route("users/{id}")]
         public async Task<IActionResult> GetUserById(string id)
         {
-            UserDTO user = new UserDTO();
-            user = _db.Users.Where(x => x.Id == id).Select(c => new UserDTO()
-            {
-                Id = c.Id,  
-                Name = c.Name,
-                Email = c.Email,
-                Introduction = c.Introduction,
-                Speciality = c.Speciality
-            }).SingleOrDefault();
+            UserDTO user = await _accService.GetUserDTOById(id);
 
             return Ok(user);
         }
 
 
         // GET: api/Account/pagedDocs
+        [Authorize]
         [HttpGet("pagedDocs")]
-        public async Task<ActionResult<PagedList<User>>> GetUsers([FromQuery]UserParams userParams)
+        public async Task<IActionResult> GetUsers([FromQuery]UserParams userParams)
         {
             var userList = await _accService.GetUsersAsync(userParams);
             var responce = new PaginationHeader<User>(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
@@ -225,9 +172,9 @@ namespace DoctorWebApi.Controllers
 
         // GET: api/Account/users
         [HttpGet("users")]
-        public async Task<ActionResult<PagedList<User>>> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers()
         {
-            var userList = await _db.Users.ToListAsync();
+            var userList = await _accService.GetAllUsers();
             return Ok(userList);
         }
 
@@ -245,16 +192,17 @@ namespace DoctorWebApi.Controllers
             }
             var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
             user.LastActive = DateTime.UtcNow;
-            _db.SaveChangesAsync(); 
+            _accService.SaveAllAsync();
             return Ok(result);
         }
 
         // PUT api/Account/Edit/id
+        [Authorize]
         [HttpPut]
         [Route("Edit/{id}")]
         public async Task<IActionResult> EditAccountById(string id, [FromBody] EditUserForm editUserForm)
         {
-            var userToUpdate = _db.Users.FirstOrDefault(x => x.Id == id);
+            var userToUpdate = await _accService.GetUserById(id);
             if (userToUpdate == null)
             {
                 return NotFound($"User with Id = {id} not found");
@@ -264,7 +212,7 @@ namespace DoctorWebApi.Controllers
             userToUpdate.Introduction = editUserForm.Introduction;
             userToUpdate.Speciality = editUserForm.Speciality;
 
-            await _db.SaveChangesAsync();
+            _accService.SaveAllAsync();
             return Ok(userToUpdate);
         }
     }

@@ -3,6 +3,7 @@ using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,7 @@ namespace DoctorWebApi.Controllers
             _mapper = mapper;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<Message>> CreateMessage(CreateMessage createParams)
         {
@@ -52,6 +54,7 @@ namespace DoctorWebApi.Controllers
             return BadRequest("Failed to send message");
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesForUser([FromQuery] MessageParams messageParams, string userId)
         {
@@ -62,6 +65,7 @@ namespace DoctorWebApi.Controllers
             return Ok(responce);
         }
 
+        [Authorize]
         [HttpGet("thread/{un_send}/{un_rec}")]
         public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesThread(string un_send, string un_rec)
         {
@@ -71,6 +75,7 @@ namespace DoctorWebApi.Controllers
             return Ok(responce);
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteMessage(int id, string un_send)
         {

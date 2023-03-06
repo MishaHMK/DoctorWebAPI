@@ -1,12 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using DoctorWebApi.Interfaces;
 using DoctorWebApi.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using IdentityServer4.AccessTokenValidation;
 using AutoMapper;
 using Doctor.DataAcsess.Interfaces;
 using Doctor.DataAcsess.Entities;
@@ -14,21 +9,47 @@ using Doctor.DataAcsess;
 using DoctorWebApi.EmailProvider;
 using DoctorWebApi.Mapper;
 using Microsoft.OpenApi.Models;
-using DoctorWebApi.Helper;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Doctor.BLL.Interface;
+using Doctor.BLL.Services;
 
-var builder = WebApplication.CreateBuilder();
+var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+
+builder.Services.AddIdentityCore<User>(opt =>
+{
+    opt.User.RequireUniqueEmail = true;
+    opt.SignIn.RequireConfirmedEmail = true;
+})
+            .AddRoles<IdentityRole>()
+            .AddRoleManager<RoleManager<IdentityRole>>()
+            .AddSignInManager<SignInManager<User>>()
+            .AddRoleValidator<RoleValidator<IdentityRole>>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+        {
+            var Key = Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]);
+            o.SaveToken = true;
+            o.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidIssuer = builder.Configuration["JWT:Issuer"],
+                ValidAudience = builder.Configuration["JWT:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Key)
+            };
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddAutoMapper(typeof(Program));
-
-var mapperConfig = new MapperConfiguration(mc =>
-{
-    mc.AddProfile(new AllMappersProfile());
-});
 
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
         {
@@ -47,7 +68,7 @@ builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 
 builder.Services.AddTransient<IAccountService, AccountService>();
 
-builder.Services.AddTransient<IJwtService, JwtService>();
+builder.Services.AddTransient<IJWTService, JWTService>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
@@ -72,15 +93,6 @@ builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
 
-builder.Services.AddIdentity<User, IdentityRole>(opt =>
-{
-    opt.User.RequireUniqueEmail = true;
-    opt.SignIn.RequireConfirmedEmail = true;
-})
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {
@@ -96,21 +108,12 @@ builder.Services.AddSwaggerGen(o =>
 });
 
 
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.Events.OnRedirectToLogin = (context) =>
-        {
-            context.Response.StatusCode = 401;
-            return Task.CompletedTask;
-        };
-    });
-
-builder.Services.ConfigureOptions<JwtOptionsSetup>();
-builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
-
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new AllMappersProfile());
+});
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
 var app = builder.Build();
 
@@ -121,12 +124,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseHsts();
-app.UseCors();
+//app.UseCors();
 
 app.MapControllers();
 
