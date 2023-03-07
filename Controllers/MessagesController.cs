@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Doctor.BLL.Interface;
+using Doctor.BLL.Services;
 using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess.Helpers;
@@ -13,15 +15,11 @@ namespace DoctorWebApi.Controllers
     [ApiController]
     public class MessagesController : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
-        private readonly IMessageRepository _messageRepository;
-        private readonly IMapper _mapper;
+        private readonly IMessageService _messageService;
 
-        public MessagesController(ApplicationDbContext db, IMessageRepository messageRepository, IMapper mapper) 
+        public MessagesController(IMessageService messageService) 
         {
-            _db = db;
-            _messageRepository = messageRepository;
-            _mapper = mapper;
+            _messageService = messageService;
         }
 
         [Authorize]
@@ -33,23 +31,12 @@ namespace DoctorWebApi.Controllers
                 return BadRequest("You cannot send messages to yourself!");
             }
 
-            var sender = await _db.Users.SingleOrDefaultAsync(x => x.Name == createParams.SenderName);
-            var recepient = await _db.Users.SingleOrDefaultAsync(x => x.Name == createParams.RecipientName);
+            if(createParams.RecipientName == null) return NotFound("No Recepient");
 
-            if(recepient == null) return NotFound("No Recepient");
+            await _messageService.CreateMessage(createParams);
 
-            var message = new Message
-            {
-                Sender = sender,
-                Recipient = recepient,
-                SenderUserName = sender.Name,
-                RecipientUserName = recepient.Name,
-                Content = createParams.Content
-            };
-
-            _messageRepository.AddMessage(message);
-
-            if(await _messageRepository.SaveAllAsync()) return Ok(_mapper.Map<MessageDTO>(message));
+            if(await _messageService.SaveAllAsync()) 
+                return Ok("Message sent");
 
             return BadRequest("Failed to send message");
         }
@@ -58,7 +45,7 @@ namespace DoctorWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesForUser([FromQuery] MessageParams messageParams, string userId)
         {
-            var messages = await _messageRepository.GetMessagesForUser(messageParams, userId);
+            var messages = await _messageService.GetMessages(messageParams, userId);
 
             var responce = new PaginationHeader<MessageDTO>(messages, messages.CurrentPage, messages.PageSize, messages.TotalCount);
 
@@ -70,7 +57,7 @@ namespace DoctorWebApi.Controllers
         public async Task<ActionResult<PagedList<MessageDTO>>> GetMessagesThread(string un_send, string un_rec)
         {
 
-            var responce = await _messageRepository.GetMessageThread(un_send, un_rec);
+            var responce = await _messageService.GetMessagesThread(un_send, un_rec);
 
             return Ok(responce);
         }
@@ -79,7 +66,7 @@ namespace DoctorWebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteMessage(int id, string un_send)
         {
-            var message = await _messageRepository.GetMessage(id);
+            var message = await _messageService.GetMessage(id);
 
             if (message.Sender.Name != un_send && message.Recipient.Name != un_send)
                 return Unauthorized();
@@ -89,9 +76,9 @@ namespace DoctorWebApi.Controllers
             if (message.Recipient.Name == un_send) message.RecepientDeleted = true;
 
             if (message.SenderDeleted || message.RecepientDeleted)
-                _messageRepository.DeleteMessage(message);
+                _messageService.DeleteMessage(message);
 
-            if (await _messageRepository.SaveAllAsync()) return Ok();
+            if (await _messageService.SaveAllAsync()) return Ok();
 
             return BadRequest("Problem deleting the message");
         }

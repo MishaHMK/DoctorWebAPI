@@ -100,7 +100,7 @@ namespace DoctorWebApi.Controllers
                             await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
                                                      $"Follow the: <br/><a href={url}>link to confirm</a>");
 
-                            _accService.SaveAllAsync();
+                            await _accService.SaveAllAsync();
                         }
                         catch (Exception)
                         {
@@ -137,7 +137,7 @@ namespace DoctorWebApi.Controllers
             }
 
             user.LastActive = DateTime.UtcNow;
-            _accService.SaveAllAsync();
+            await _accService.SaveAllAsync();
 
             return Ok(token);
         }
@@ -192,7 +192,7 @@ namespace DoctorWebApi.Controllers
             }
             var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
             user.LastActive = DateTime.UtcNow;
-            _accService.SaveAllAsync();
+            await _accService.SaveAllAsync();
             return Ok(result);
         }
 
@@ -212,7 +212,7 @@ namespace DoctorWebApi.Controllers
             userToUpdate.Introduction = editUserForm.Introduction;
             userToUpdate.Speciality = editUserForm.Speciality;
 
-            _accService.SaveAllAsync();
+            await _accService.SaveAllAsync();
             return Ok(userToUpdate);
         }
     }

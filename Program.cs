@@ -72,6 +72,8 @@ builder.Services.AddTransient<IJWTService, JWTService>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
+builder.Services.AddTransient<IMessageService, MessageService>();
+
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
 builder.Services.AddControllers();

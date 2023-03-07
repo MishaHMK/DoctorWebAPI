@@ -13,11 +13,9 @@ namespace DoctorWebApi.Controllers
     public class AppointmentController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
-        private readonly ApplicationDbContext _db;
 
         public AppointmentController(IAppointmentService appointmentService, ApplicationDbContext db)
         {
-            _db = db;
             _appointmentService = appointmentService;
         }
 
@@ -89,10 +87,10 @@ namespace DoctorWebApi.Controllers
         [Route("GetCalendarDataById/{id}")]
         public async Task<IActionResult> GetCalendarDataById(int id)
         {
-            AppointmentDTO response = new AppointmentDTO();
             try
             {
-               response = await _appointmentService.GetDetailsById(id);
+                AppointmentDTO response = new AppointmentDTO();
+                response = await _appointmentService.GetDetailsById(id);
                return Ok(response);
             }
             catch 
@@ -107,23 +105,12 @@ namespace DoctorWebApi.Controllers
         [Route("Edit/{id}")]
         public async Task<IActionResult> EditAppointmentById(int id, [FromBody] AppointmentDTO appointmentDTO)
         {
-            var appointmentToUpdate = _db.Appointments.FirstOrDefault(x => x.Id == appointmentDTO.Id);
-            var startDate = Convert.ToDateTime(appointmentDTO.StartDate);
-            var endDate = Convert.ToDateTime(appointmentDTO.StartDate).AddMinutes(Convert.ToDouble(60));
+            var appointmentToUpdate = _appointmentService.EditAppointmentById(id, appointmentDTO);
             if (appointmentToUpdate == null)
             {
                 return NotFound($"Appointment with Id = {id} not found");
             }
-            appointmentToUpdate.Title = appointmentDTO.Title;
-            appointmentToUpdate.Description = appointmentDTO.Description;
-            appointmentToUpdate.StartDate = startDate;
-            appointmentToUpdate.EndDate = endDate;
-            appointmentToUpdate.Duration = 60;
-            appointmentToUpdate.DoctorId = appointmentDTO.DoctorId;
-            appointmentToUpdate.PatientId = appointmentDTO.PatientId;
-            appointmentToUpdate.IsApproved = false;
-            appointmentToUpdate.AdminId = appointmentDTO.AdminId;
-            await _db.SaveChangesAsync();
+
             return Ok(appointmentToUpdate);
         }
 
