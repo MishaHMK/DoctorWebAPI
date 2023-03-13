@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Doctor.BLL.Interface;
 using Doctor.BLL.Services;
+using Doctor.DataAcsess.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +66,8 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 ));
 
 builder.Services.AddTransient<IAppointmentService, AppointmentService>();
+
+builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
 builder.Services.AddTransient<IAccountService, AccountService>();
 

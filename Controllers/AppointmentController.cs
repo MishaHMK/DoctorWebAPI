@@ -45,7 +45,7 @@ namespace DoctorWebApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var appointment = _appointmentService.Add(model);
+            var appointment = await _appointmentService.Add(model);
 
             return Ok(appointment);
         }
@@ -105,7 +105,7 @@ namespace DoctorWebApi.Controllers
         [Route("Edit/{id}")]
         public async Task<IActionResult> EditAppointmentById(int id, [FromBody] AppointmentDTO appointmentDTO)
         {
-            var appointmentToUpdate = _appointmentService.EditAppointmentById(id, appointmentDTO);
+            var appointmentToUpdate = await _appointmentService.EditAppointmentById(id, appointmentDTO);
             if (appointmentToUpdate == null)
             {
                 return NotFound($"Appointment with Id = {id} not found");

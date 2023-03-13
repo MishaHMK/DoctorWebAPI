@@ -42,7 +42,7 @@ namespace DoctorWebApi.Controllers
         [HttpGet("roles")]
         public async Task<IActionResult> CheckRoles()
         {
-            var roleList =  _accService.GetRoles();
+            var roleList =  await _accService.GetRoles();
 
             return Ok(roleList);
         }
@@ -51,7 +51,7 @@ namespace DoctorWebApi.Controllers
         [HttpGet("times")]
         public async Task<IActionResult> GetTimes()
         {
-            var timeList = _accService.GetTimes();
+            var timeList = await _accService.GetTimes();
 
             return Ok(timeList);
         }
@@ -60,7 +60,7 @@ namespace DoctorWebApi.Controllers
         [HttpGet("specialities")]
         public async Task<IActionResult> GetSpecialities()
         {
-            var specList = _accService.GetSpecialities();
+            var specList = await _accService.GetSpecialities();
 
             return Ok(specList);
         }
