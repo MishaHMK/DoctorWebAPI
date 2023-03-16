@@ -15,6 +15,7 @@ using System.Text;
 using Doctor.BLL.Interface;
 using Doctor.BLL.Services;
 using Doctor.DataAcsess.Repositories;
+using DoctorWebApi.HubSignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 ValidIssuer = builder.Configuration["JWT:Issuer"],
                 ValidAudience = builder.Configuration["JWT:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Key)
+            };
+
+            o.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accsessToken = context.Request.Query["access_token"];
+
+                    var path = context.HttpContext.Request.Path;
+                    
+                    if(!string.IsNullOrEmpty(accsessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accsessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
             };
 });
 
@@ -79,7 +97,11 @@ builder.Services.AddTransient<IMessageService, MessageService>();
 
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
+builder.Services.AddSingleton<PresenceTracker>();
+
 builder.Services.AddControllers();
+
+builder.Services.AddSignalR();
 
 builder.Services.AddMvc().AddSessionStateTempDataProvider();
 
@@ -129,7 +151,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+app.UseCors(options => options.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -138,5 +160,7 @@ app.UseHsts();
 //app.UseCors();
 
 app.MapControllers();
+app.MapHub<PresenceHub>("/hubs/presence");
+app.MapHub<NotficitaionHub>("/hubs/notification");
 
 app.Run();
