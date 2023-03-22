@@ -35,6 +35,14 @@ namespace DoctorWebApi.Controllers
             return Ok(patientList);
         }
 
+        // GET: api/Appointment/dates
+        [HttpGet("dates")]
+        public async Task<IActionResult> GetAllAppointmentsDates()
+        {
+            var datesList = _appointmentService.GetApointmentDateList();
+            return Ok(datesList);
+        }
+
         // POST api/Appointment/save
         [HttpPost]
         [Route("save")]

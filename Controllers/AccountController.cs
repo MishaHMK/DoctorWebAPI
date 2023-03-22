@@ -20,7 +20,7 @@ namespace DoctorWebApi.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accService;
-        private readonly IEmailSender _emailSender;
+        //private readonly IEmailSender _emailSender;
         private readonly IJWTService _jWTManager;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
@@ -31,7 +31,7 @@ namespace DoctorWebApi.Controllers
         {
             _signInManager = signInManager;
             _userManager = userManager;
-            _emailSender = emailSender;
+            //_emailSender = emailSender;
             _accService = accService;
             _jWTManager = jWTManager;
         }
@@ -97,8 +97,8 @@ namespace DoctorWebApi.Controllers
                             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                             var encoded = HttpUtility.UrlEncode(token);
                             string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
-                            await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
-                                                     $"Follow the: <br/><a href={url}>link to confirm</a>");
+                           /* await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
+                                                     $"Follow the: <br/><a href={url}>link to confirm</a>"); */
 
                             await _accService.SaveAllAsync();
                         }
