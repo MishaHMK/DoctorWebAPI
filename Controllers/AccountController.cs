@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Web;
@@ -20,20 +21,22 @@ namespace DoctorWebApi.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accService;
-        //private readonly IEmailSender _emailSender;
+        private readonly IEmailSender _emailSender;
         private readonly IJWTService _jWTManager;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly HostUrlOptions _hostUrl;
 
         public AccountController(UserManager<User> userManager, SignInManager<User> signInManager,
-            IEmailSender emailSender, IAccountService accService, IJWTService jWTManager)
+            IEmailSender emailSender, IAccountService accService, IJWTService jWTManager,
+            IOptions<HostUrlOptions> options)
         {
             _signInManager = signInManager;
             _userManager = userManager;
-            //_emailSender = emailSender;
+            _emailSender = emailSender;
             _accService = accService;
             _jWTManager = jWTManager;
+            _hostUrl = options.Value;
         }
 
         public string BackEndApiURL => _hostUrl.BackEnd + "/api";
@@ -72,7 +75,7 @@ namespace DoctorWebApi.Controllers
         {
             await CheckRoles();
 
-            var userName = _accService.GetUsername(model.Name);
+            string userName = await _accService.GetUsername(model.Name);
             
             if (userName == null)
             {
@@ -90,15 +93,15 @@ namespace DoctorWebApi.Controllers
                     if (result.Succeeded)
                     {
                         await _userManager.AddToRoleAsync(user, model.RoleName);
-                        await _signInManager.SignInAsync(user, isPersistent: true);
+                        //await _signInManager.SignInAsync(user, isPersistent: true);
                         user.Speciality = model.Speciality;
                         try
                         {
                             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                             var encoded = HttpUtility.UrlEncode(token);
                             string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
-                           /* await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
-                                                     $"Follow the: <br/><a href={url}>link to confirm</a>"); */
+                            await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
+                                                     $"Follow the: <br/><a href={url}>link to confirm</a>");
 
                             await _accService.SaveAllAsync();
                         }
@@ -129,14 +132,14 @@ namespace DoctorWebApi.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            var token = _jWTManager.Authenticate(user.Id, roles);
+            var token = _jWTManager.Authenticate(user.Id, user.Name, roles);
 
             if (token == null)
             {
                 return Unauthorized();
             }
 
-            user.LastActive = DateTime.UtcNow;
+            user.LastActive = DateTime.Now;
             await _accService.SaveAllAsync();
 
             return Ok(token);
@@ -191,7 +194,7 @@ namespace DoctorWebApi.Controllers
                 return NotFound("No user");
             }
             var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
-            user.LastActive = DateTime.UtcNow;
+            user.LastActive = DateTime.Now;
             await _accService.SaveAllAsync();
             return Ok(result);
         }

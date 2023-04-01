@@ -27,6 +27,7 @@ builder.Services.AddIdentityCore<User>(opt =>
     opt.User.RequireUniqueEmail = true;
     opt.SignIn.RequireConfirmedEmail = true;
 })
+            .AddDefaultTokenProviders()
             .AddRoles<IdentityRole>()
             .AddRoleManager<RoleManager<IdentityRole>>()
             .AddSignInManager<SignInManager<User>>()
@@ -161,6 +162,6 @@ app.UseHsts();
 
 app.MapControllers();
 app.MapHub<PresenceHub>("/hubs/presence");
-app.MapHub<NotficitaionHub>("/hubs/notification");
+app.MapHub<MessageHub>("/hubs/message");
 
 app.Run();
