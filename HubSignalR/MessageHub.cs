@@ -3,6 +3,7 @@ using Doctor.BLL.Interface;
 using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Interfaces;
+using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.SignalR;
 
 namespace DoctorWebApi.HubSignalR
@@ -19,14 +20,14 @@ namespace DoctorWebApi.HubSignalR
         public override async Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();
-            var otherUser = httpContext.Request.Query["user"];
-            var groupName = GetGroupName(Context.User.GetUsername(), otherUser);
-            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            //var otherUser = httpContext.Request.Query["user"];
+            //var groupName = GetGroupName(Context.User.GetUsername(), otherUser);
+            //await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-            var messages = await _messageService
-                           .GetMessagesThread(Context.User.GetUsername(), otherUser);
+            //var messages = await _messageService
+            //               .GetMessagesThread(Context.User.GetUsername(), otherUser);
 
-            await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messages);
+            //await Clients.Group(groupName).SendAsync("GetMessageThread", messages);
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -47,7 +48,7 @@ namespace DoctorWebApi.HubSignalR
 
             if (sender != null && recepient != null)
             {
-                var message = new Message
+                var message = new Doctor.DataAcsess.Entities.Message
                 {
                     Sender = sender,
                     Recipient = recepient,
@@ -65,6 +66,28 @@ namespace DoctorWebApi.HubSignalR
                     await Clients.Group(group).SendAsync("NewMessage", message);
                 }
             }
+        }
+    
+
+        public async Task RecieveThread(string sender, string reciever)
+        {
+            var group = GetGroupName(sender, reciever);
+            await Groups.AddToGroupAsync(Context.ConnectionId, group);
+
+            var messages = await _messageService
+                          .GetMessagesThread(sender, reciever);
+
+            await Clients.Group(group).SendAsync("RecieveMessageThread", messages);
+        }
+
+
+        public async Task RecieveUnread(string reciever)
+        {
+            //var httpContext = Context.GetHttpContext();
+            MessageParams messageParams = new MessageParams();
+            var repsonce = await _messageService.GetMessages(messageParams, reciever);
+            await Clients.Caller.SendAsync("ReceiveUnreadCount", repsonce.TotalCount);
+            //await Clients.User(reciever).SendAsync("ReceiveUnreadCount", repsonce.TotalCount);
         }
 
         private string GetGroupName(string caller, string other)
