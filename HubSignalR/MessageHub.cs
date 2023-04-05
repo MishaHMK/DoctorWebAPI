@@ -67,7 +67,27 @@ namespace DoctorWebApi.HubSignalR
                 }
             }
         }
-    
+
+        public async Task RemoveMessage(int id, string un_send)
+        {
+            var message = await _messageService.GetMessage(id);
+
+            if (message.Sender.Name == un_send) message.SenderDeleted = true;
+
+            if (message.Recipient.Name == un_send) message.RecepientDeleted = true;
+
+            if (message.SenderDeleted || message.RecepientDeleted)
+            {
+                _messageRepository.DeleteMessage(message);
+            }
+
+            if (await _messageRepository.SaveAllAsync())
+            {
+                await Clients.Caller.SendAsync("DeleteMessage", message.Id);
+            }
+
+        }
+
 
         public async Task RecieveThread(string sender, string reciever)
         {

@@ -206,6 +206,9 @@ namespace DoctorWebApi.Controllers
         public async Task<IActionResult> EditAccountById(string id, [FromBody] EditUserForm editUserForm)
         {
             var userToUpdate = await _accService.GetUserById(id);
+
+            _accService.UpdateEditedUserMessages(id, userToUpdate.Name, editUserForm.Name);
+
             if (userToUpdate == null)
             {
                 return NotFound($"User with Id = {id} not found");

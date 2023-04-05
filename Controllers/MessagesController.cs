@@ -5,6 +5,7 @@ using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Interfaces;
+using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ namespace DoctorWebApi.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<ActionResult<Message>> CreateMessage(CreateMessage createParams)
+        public async Task<ActionResult<Doctor.DataAcsess.Entities.Message>> CreateMessage(CreateMessage createParams)
         {
             if (createParams.SenderName == createParams.RecipientName)
             {
@@ -65,18 +66,8 @@ namespace DoctorWebApi.Controllers
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteMessage(int id, string un_send)
-        {
-            var message = await _messageService.GetMessage(id);
-
-            if (message.Sender.Name != un_send && message.Recipient.Name != un_send)
-                return Unauthorized();
-
-            if (message.Sender.Name == un_send) message.SenderDeleted = true;
-
-            if (message.Recipient.Name == un_send) message.RecepientDeleted = true;
-
-            if (message.SenderDeleted || message.RecepientDeleted)
-                _messageService.DeleteMessage(message);
+        {     
+            await _messageService.DeleteMessageAsync(id, un_send);
 
             if (await _messageService.SaveAllAsync()) return Ok();
 
