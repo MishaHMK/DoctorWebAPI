@@ -1,13 +1,15 @@
-﻿using Doctor.BLL.Interface;
+﻿    using Doctor.BLL.Interface;
 using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
+using Doctor.DataAcsess.Helpers;
+using DoctorWebApi.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DoctorWebApi.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AppointmentController : ControllerBase
@@ -58,6 +60,19 @@ namespace DoctorWebApi.Controllers
             return Ok(appointment);
         }
 
+
+        // GET: api/Appointment/pagedApps/id
+        [HttpGet("pagedApps/{id}")]
+        public async Task<IActionResult> GetApps([FromQuery] AppointParams appParams, string id)
+        {
+            var appList = await _appointmentService.GetUserAppoints(appParams, id);
+            if (appList == null)
+            {
+                BadRequest("User has no role");
+            }
+            var responce = new PaginationHeader<AppointmentDTOPage>(appList, appParams.PageNumber, appParams.PageSize, appList.TotalCount);
+            return Ok(responce);
+        }
 
         // GET api/Appointment/GetCalendarData
         [HttpGet]

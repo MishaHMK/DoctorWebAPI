@@ -1,5 +1,4 @@
 ﻿using Doctor.BLL.Interface;
-using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Models;
@@ -8,10 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
-using System.Data;
 using System.Web;
 
 namespace DoctorWebApi.Controllers
@@ -40,6 +37,7 @@ namespace DoctorWebApi.Controllers
         }
 
         public string BackEndApiURL => _hostUrl.BackEnd + "/api";
+        public string FrontendURL => _hostUrl.FrontEnd;
 
         // GET api/Account/roles
         [HttpGet("roles")]
@@ -99,7 +97,8 @@ namespace DoctorWebApi.Controllers
                         {
                             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                             var encoded = HttpUtility.UrlEncode(token);
-                            string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
+                            //string url = $"{BackEndApiURL}/Account/confirmEmail?userId={user.Id}&token={token}";
+                            string url = $"{FrontendURL}/confirmed/?userId={user.Id}&token={token}";
                             await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
                                                      $"Follow the: <br/><a href={url}>link to confirm</a>");
 
@@ -132,17 +131,22 @@ namespace DoctorWebApi.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            var token = _jWTManager.Authenticate(user.Id, user.Name, roles);
-
-            if (token == null)
+            if (user.EmailConfirmed == true)
             {
-                return Unauthorized();
+                var token = _jWTManager.Authenticate(user.Id, user.Name, roles);
+
+                if (token == null)
+                {
+                    return Unauthorized();
+                }
+
+                user.LastActive = DateTime.Now;
+                await _accService.SaveAllAsync();
+
+                return Ok(token);
             }
 
-            user.LastActive = DateTime.Now;
-            await _accService.SaveAllAsync();
-
-            return Ok(token);
+            else return BadRequest("Your email hasn't been confirmed");
         }
 
         [HttpGet("logout")]
@@ -169,7 +173,7 @@ namespace DoctorWebApi.Controllers
         public async Task<IActionResult> GetUsers([FromQuery]UserParams userParams)
         {
             var userList = await _accService.GetUsersAsync(userParams);
-            var responce = new PaginationHeader<User>(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
+            var responce = new PaginationHeader<UserRateDTO>(userList, userParams.PageNumber, userParams.PageSize, userList.TotalCount);
             return Ok(responce);
         }
 

@@ -88,6 +88,10 @@ builder.Services.AddTransient<IAppointmentService, AppointmentService>();
 
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+
+builder.Services.AddTransient<IReviewService, ReviewService>();
+
 builder.Services.AddTransient<IAccountService, AccountService>();
 
 builder.Services.AddTransient<IJWTService, JWTService>();
