@@ -69,7 +69,7 @@ namespace DoctorWebApi.Controllers
         // DELETE api/Review/Delete/id
         [HttpDelete]
         [Route("Delete/{id}")]
-        public async Task<IActionResult> DeleteAppointmentById(int id)
+        public async Task<IActionResult> DeleteReviewById(int id)
         {
             await _reviewService.DeleteReview(id);
 

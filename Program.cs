@@ -16,6 +16,7 @@ using Doctor.BLL.Interface;
 using Doctor.BLL.Services;
 using Doctor.DataAcsess.Repositories;
 using DoctorWebApi.HubSignalR;
+using DoctorWebApi.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +96,8 @@ builder.Services.AddTransient<IReviewService, ReviewService>();
 builder.Services.AddTransient<IAccountService, AccountService>();
 
 builder.Services.AddTransient<IJWTService, JWTService>();
+
+builder.Services.AddTransient<IExportUtility, ExportUtility>();
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 
