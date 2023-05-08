@@ -54,7 +54,7 @@ namespace DoctorWebApi.Controllers
         // PUT api/Review/Edit/id
         [HttpPut]
         [Route("Edit/{id}")]
-        public async Task<IActionResult> EditAppointmentById(int id, [FromBody] Review review)
+        public async Task<IActionResult> EditReviewById(int id, [FromBody] Review review)
         {
             var reviewToUpdate = await _reviewService.EditReviewById(id, review);  
             if (reviewToUpdate == null)

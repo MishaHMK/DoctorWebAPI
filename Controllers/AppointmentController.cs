@@ -152,7 +152,7 @@ namespace DoctorWebApi.Controllers
 
                 return table;
             }
-            catch
+            catch (Exception ex) 
             {
                 return null;
             }
