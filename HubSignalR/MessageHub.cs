@@ -20,14 +20,6 @@ namespace DoctorWebApi.HubSignalR
         public override async Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();
-            //var otherUser = httpContext.Request.Query["user"];
-            //var groupName = GetGroupName(Context.User.GetUsername(), otherUser);
-            //await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-
-            //var messages = await _messageService
-            //               .GetMessagesThread(Context.User.GetUsername(), otherUser);
-
-            //await Clients.Group(groupName).SendAsync("GetMessageThread", messages);
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -54,6 +46,8 @@ namespace DoctorWebApi.HubSignalR
                     Recipient = recepient,
                     SenderUserName = sender.Name,
                     RecipientUserName = recepient.Name,
+                    SenderId = sender.Id,   
+                    RecipientId = recepient.Id, 
                     Content = createParams.Content
                 };
 
@@ -62,7 +56,7 @@ namespace DoctorWebApi.HubSignalR
 
                 if (await _messageRepository.SaveAllAsync())
                 {
-                    var group = GetGroupName(sender.UserName, recepient.UserName);
+                    var group = GetGroupName(sender.Id, recepient.Id);
                     await Clients.Group(group).SendAsync("NewMessage", message);
                 }
             }

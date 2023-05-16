@@ -82,6 +82,8 @@ namespace DoctorWebApi.Controllers
                     var user = new User
                     {
                         UserName = model.Email,
+                        Surname = model.Surname,
+                        FatherName = model.Fathername,
                         Email = model.Email,
                         Name = model.Name
                     };
@@ -211,7 +213,7 @@ namespace DoctorWebApi.Controllers
         {
             var userToUpdate = await _accService.GetUserById(id);
 
-            _accService.UpdateEditedUserMessages(id, userToUpdate.Name, editUserForm.Name);
+            await _accService.UpdateEditedUserMessages(id, userToUpdate.Name, editUserForm.Name);
 
             if (userToUpdate == null)
             {
@@ -219,6 +221,8 @@ namespace DoctorWebApi.Controllers
             }
 
             userToUpdate.Name = editUserForm.Name;
+            userToUpdate.Surname = editUserForm.Surname;
+            userToUpdate.FatherName = editUserForm.Fathername;
             userToUpdate.Introduction = editUserForm.Introduction;
             userToUpdate.Speciality = editUserForm.Speciality;
 
