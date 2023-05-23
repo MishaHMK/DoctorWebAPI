@@ -17,29 +17,6 @@ namespace DoctorWebApi.Controllers
             _messageService = messageService;
         }
 
-        //[Authorize]
-        //[HttpPost]
-        //public async Task<IActionResult> CreateMessage(CreateMessage createParams)
-        //{
-        //    if (createParams.SenderName == createParams.RecipientName)
-        //    {
-        //        return BadRequest("You cannot send messages to yourself!");
-        //    }
-
-        //    if(createParams.RecipientName == null) return NotFound("No Recepient");
-
-        //    var message = await _messageService.CreateMessage(createParams);
-
-        //    if(message != null)
-        //    {
-        //        await _messageService.SaveAllAsync();
-        //        return Ok(message);
-        //    }
-
-        //    return BadRequest("Failed to send message");
-        //}
-
-       // [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateMessage(CreateMessage createParams)
         {
@@ -72,16 +49,6 @@ namespace DoctorWebApi.Controllers
             return Ok(responce);
         }
 
-        //[Authorize]
-        //[HttpGet("thread/{un_send}/{un_rec}")]
-        //public async Task<IActionResult> GetMessagesThread(string un_send, string un_rec)
-        //{
-        //    var responce = await _messageService.GetMessagesThread(un_send, un_rec);
-
-        //    return Ok(responce);
-        //}
-
-
        // [Authorize]
         [HttpGet("thread/{id_send}/{id_rec}")]
         public async Task<IActionResult> GetMessagesThread(string id_send, string id_rec)
@@ -90,17 +57,6 @@ namespace DoctorWebApi.Controllers
 
             return Ok(responce);
         }
-
-        //[Authorize]
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteMessage(int id, string un_send)
-        //{     
-        //    await _messageService.DeleteMessageAsync(id, un_send);
-
-        //    await _messageService.SaveAllAsync();
-
-        //    return Ok();
-        //}
 
        // [Authorize]
         [HttpDelete("{id}")]

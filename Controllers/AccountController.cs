@@ -213,12 +213,12 @@ namespace DoctorWebApi.Controllers
         {
             var userToUpdate = await _accService.GetUserById(id);
 
-            await _accService.UpdateEditedUserMessages(id, userToUpdate.Name, editUserForm.Name);
-
             if (userToUpdate == null)
             {
                 return NotFound($"User with Id = {id} not found");
             }
+
+            await _accService.UpdateEditedUserMessages(id, userToUpdate.Name, editUserForm.Name);
 
             userToUpdate.Name = editUserForm.Name;
             userToUpdate.Surname = editUserForm.Surname;

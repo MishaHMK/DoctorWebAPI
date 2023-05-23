@@ -1,9 +1,6 @@
-﻿using Doctor.BLL.Extensions;
-using Doctor.BLL.Interface;
-using Doctor.DataAcsess.Entities;
+﻿using Doctor.BLL.Interface;
 using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Interfaces;
-using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.SignalR;
 
 namespace DoctorWebApi.HubSignalR
