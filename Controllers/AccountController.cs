@@ -1,4 +1,5 @@
 ﻿using Doctor.BLL.Interface;
+using Doctor.DataAcsess;
 using Doctor.DataAcsess.Entities;
 using Doctor.DataAcsess.Helpers;
 using Doctor.DataAcsess.Models;
@@ -23,6 +24,7 @@ namespace DoctorWebApi.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly HostUrlOptions _hostUrl;
+        //private readonly ApplicationDbContext _db;
 
         public AccountController(UserManager<User> userManager, SignInManager<User> signInManager,
             IEmailSender emailSender, IAccountService accService, IJWTService jWTManager,
@@ -34,6 +36,7 @@ namespace DoctorWebApi.Controllers
             _accService = accService;
             _jWTManager = jWTManager;
             _hostUrl = options.Value;
+            //_db = db;
         }
 
         public string BackEndApiURL => _hostUrl.BackEnd + "/api";
@@ -66,6 +69,45 @@ namespace DoctorWebApi.Controllers
             return Ok(specList);
         }
 
+
+        //// GET api/Account/setDocs
+        //[HttpGet("setdocs")]
+        //public async Task<IActionResult> SetDoctors()
+        //{
+        //    var doctors = (from user in _db.Users
+        //                   join userRoles in _db.UserRoles on user.Id equals userRoles.UserId
+        //                   join roles in _db.Roles.Where(x => x.Name == Roles.Doctor) on userRoles.RoleId equals roles.Id
+        //                   select new Doctor.DataAcsess.Entities.Doctor
+        //                   {
+        //                       Id = user.Id,
+        //                       Name = user.Name,
+        //                       Fathername = user.FatherName,
+        //                       Surname = user.Surname,
+        //                       Speciality = user.Speciality,
+        //                       Introduction = user.Introduction,
+        //                       UserId = user.Id
+        //                   }
+
+        //                    )
+        //                    .OrderBy(x => x.Surname)
+        //                    .ToList();
+
+        //    foreach ( var doctor in doctors ) {
+        //        var newDoc = new DoctorUser
+        //        {
+        //            Introduction = doctor.Introduction,
+        //            Speciality = doctor.Speciality,
+        //            OfficeNumber = 200,
+        //            UserId = doctor.UserId
+        //        };
+        //        _db.DoctorUsers.Add(newDoc);
+        //        _db.SaveChanges();
+        //    }
+
+
+        //    return Ok(doctors);
+        //}
+
         // POST api/Account/register
         [HttpPost]
         [Route("register")]
@@ -73,9 +115,9 @@ namespace DoctorWebApi.Controllers
         {
             await CheckRoles();
 
-            string userName = await _accService.GetUsername(model.Name);
+            string email = await _accService.GetUsername(model.Email);
             
-            if (userName == null)
+            if (email == null)
             {
                 if (ModelState.IsValid)
                 {
@@ -94,7 +136,18 @@ namespace DoctorWebApi.Controllers
                     {
                         await _userManager.AddToRoleAsync(user, model.RoleName);
                         //await _signInManager.SignInAsync(user, isPersistent: true);
-                        user.Speciality = model.Speciality;
+                        //user.Speciality = model.Speciality;
+                        if (model.RoleName == "Doctor")
+                        {
+                            var newDoc = new DoctorUser
+                            {
+                                Speciality = model.Speciality,
+                                OfficeNumber = 200,
+                                UserId = user.Id
+                            };
+                            await _accService.AddDoc(newDoc);
+                        }
+
                         try
                         {
                             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -120,7 +173,7 @@ namespace DoctorWebApi.Controllers
                 }
             }
      
-            return BadRequest("Name is already exists");
+            return BadRequest("Email is already exists");
         }
 
         // POST api/Account/authenticate
@@ -211,7 +264,8 @@ namespace DoctorWebApi.Controllers
         [Route("Edit/{id}")]
         public async Task<IActionResult> EditAccountById(string id, [FromBody] EditUserForm editUserForm)
         {
-            var userToUpdate = await _accService.GetUserById(id);
+            var userToUpdate = await _accService.GetUserById(id); 
+            var doctorToUpdate = await _accService.GetDoctorById(id);
 
             if (userToUpdate == null)
             {
@@ -223,8 +277,12 @@ namespace DoctorWebApi.Controllers
             userToUpdate.Name = editUserForm.Name;
             userToUpdate.Surname = editUserForm.Surname;
             userToUpdate.FatherName = editUserForm.Fathername;
-            userToUpdate.Introduction = editUserForm.Introduction;
-            userToUpdate.Speciality = editUserForm.Speciality;
+
+            if (doctorToUpdate != null)
+            {
+                doctorToUpdate.Introduction = editUserForm.Introduction;
+                doctorToUpdate.Speciality = editUserForm.Speciality;
+            }
 
             await _accService.SaveAllAsync();
             return Ok(userToUpdate);

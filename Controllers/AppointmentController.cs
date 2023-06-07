@@ -8,10 +8,11 @@ using System.Data;
 using NPOI.SS.UserModel;
 using DoctorWebApi.Helper;
 using NPOI.XSSF.UserModel;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DoctorWebApi.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AppointmentController : ControllerBase

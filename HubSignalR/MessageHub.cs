@@ -53,7 +53,7 @@ namespace DoctorWebApi.HubSignalR
 
                 if (await _messageRepository.SaveAllAsync())
                 {
-                    var group = GetGroupName(sender.Id, recepient.Id);
+                    var group = GetGroupName(sender.Email, recepient.Email);
                     await Clients.Group(group).SendAsync("NewMessage", message);
                 }
             }
